@@ -112,7 +112,7 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 			break;
 		}
 
-		float off_array[2]; switch(trans_type) 
+		double off_array[2]; switch(trans_type) 
 		{		
 		case XY:
 

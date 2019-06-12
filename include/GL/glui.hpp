@@ -237,7 +237,7 @@ public:
 
 /************************************************************/
 /*                                                          */
-/*                  Basic utitlity class                    */
+/*                   Basic utility class                    */
 /*                                                          */
 /************************************************************/
 
@@ -259,39 +259,40 @@ private:
 	{
 	public:
 		
-		int height; 		
-		void *font;	 		
-		const char(*width)[256];
+		const int height; 		
+		void *const font;	 		
+		const char *const width; //[256];
 
-		Font(int h=0, void *f=0, void *w=0) //GCC
-		{
-			height = h; font = f; (void*&)width = w;
-		}
+		Font(int h=0, void *f=0, char *w=0)
+		:height(h),font(f),width(w){}
 
 	public: //Compatibility layer
 		
 		inline operator void*()const{ return font; }
 
-		inline const Font &operator=(void *font)const
+		#ifdef GLUI_GLUI_H___NODEPRECATED
+		inline Font &operator=(void *font)
 		{	
 			Window *p = (Window*)this;
 			(char*&)p-=(char*)&p->font-(char*)p; 
 
 			p->set_font(font); return *this;
 		}
-		inline const Font &operator=(const Font &cp)const
+		#endif
+
+		inline Font &operator=(const Font &cp)
 		{
 			return *(Font*)
 			memcpy(const_cast<Font*>(this),&cp,sizeof(cp));
 		}		
 	};
-	static /*const*/ Font _glut_fonts[7];
+	static const Font _glut_fonts[7];
 	
 public:
 
 	/** Properties of our control */    
 
-	const Font font; /**< Our glutbitmap font */
+	Font font; /**< Our glutbitmap font */
 
 public:
 
@@ -305,7 +306,7 @@ public:
 	inline int char_width(char c)
 	{
 		assert(font.width);
-		return (*font.width)[(unsigned char)c&0xFF]; 
+		return font.width[(unsigned char)c&0xFF]; 
 	}	
 	inline int string_width(C_String str)
 	{
@@ -1472,6 +1473,8 @@ public: //Retired interfaces
 
 	inline double get_float_val(){ return float_val; }
 
+	inline double *get_float_array_val(){ return float_array_val; }	
+
 	inline void get_float_array_val(float *array_ptr)
 	{	
 		if(!GLUI_H||array_ptr) //legacy
@@ -1481,9 +1484,8 @@ public: //Retired interfaces
 	inline void get_float_array_val(double *array_ptr)
 	{				 
 		if(!GLUI_H||array_ptr) //legacy
-		memcpy(array_ptr,float_array_val,float_array_size);
-	}
-	inline double *get_float_array_val(){ return float_array_val; }	
+		memcpy(array_ptr,float_array_val,sizeof(double)*float_array_size);
+	}	
 	
 	#ifdef GLUI_GLUI_H___NODEPRECATED
 	inline int get_id(){ return user_id; }	

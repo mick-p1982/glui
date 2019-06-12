@@ -55,7 +55,7 @@ void Window::set_ortho_projection(int win_w, int win_h)
 
 static char glui_window_char_widths[7][256] = {};
 
-Window::Font Window::_glut_fonts[7] = //const
+const Window::Font Window::_glut_fonts[7] = //const
 {
 	//REMINDER: GLUT_BITMAP_HELVETICA_12 is actually
 	//a nice default since its tallest of those that
@@ -64,13 +64,15 @@ Window::Font Window::_glut_fonts[7] = //const
 
 	//glutBitmapHeight 
 	//These hail from fg_font_data.c
-	Font(16+2,GLUT_BITMAP_HELVETICA_12), //default
-	Font(14+2,GLUT_BITMAP_HELVETICA_10),
-	Font(23+3,GLUT_BITMAP_HELVETICA_18), //Odd squares focus rect.
-	Font(14+2,GLUT_BITMAP_TIMES_ROMAN_10),
-	Font(29+3,GLUT_BITMAP_TIMES_ROMAN_24), //Odd squares focus rect.
-	Font(14+2,GLUT_BITMAP_8_BY_13),
-	Font(16+2,GLUT_BITMAP_9_BY_15),
+	#define _(x,y) GLUT_BITMAP_##y,glui_window_char_widths[x]
+	Font(16+2,_(0,HELVETICA_12)), //default
+	Font(14+2,_(1,HELVETICA_10)),
+	Font(23+3,_(2,HELVETICA_18)), //Odd squares focus rect.
+	Font(14+2,_(3,TIMES_ROMAN_10)),
+	Font(29+3,_(4,TIMES_ROMAN_24)), //Odd squares focus rect.
+	Font(14+2,_(5,8_BY_13)),
+	Font(16+2,_(6,9_BY_15)),
+	#undef _
 };
 
 void Window::set_font(void *new_font, bool recurse)
@@ -98,10 +100,9 @@ void Window::set_font(void *new_font, bool recurse)
 		i = 0; new_font = _glut_fonts[0].font;
 	}
 
-	if(!_glut_fonts[i].width)
+	if(!_glut_fonts[i].width[' '])
 	{	
-		char *w = glui_window_char_widths[i];
-		(void*&)_glut_fonts[i].width = w;
+		char *w = (char*)_glut_fonts[i].width;
 		//Freeglut assigns various sizes to its nonprintable characters.
 		//Let those be zero so they are detectable by the returned size.
 		for(int i=32;i<256;i++)		
