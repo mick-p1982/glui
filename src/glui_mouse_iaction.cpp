@@ -128,10 +128,10 @@ bool Mouse_Interface::_mouse_stage(int stage, _iaction_iii mf, int local_x, int 
 			{
 				glutWarpPointer(GLUI.down_x,GLUI.down_y);
 			}
-
-			redraw();
 		}
 		#endif 
+		
+		redraw();
 	}
 
 	return false;
