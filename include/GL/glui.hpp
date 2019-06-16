@@ -233,6 +233,10 @@ public:
 		str = N==1?NULL:(char*)cp; return *this;
 		int compile[sizeof(T)==1]; (void)compile;
 	}
+
+public:
+
+	inline bool empty()const { return !str||!*str; }
 };
 
 /************************************************************/

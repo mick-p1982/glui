@@ -104,18 +104,19 @@ struct UI::_glut_friends
 
 		/***  First check if this is main glut window ***/		
 		if(GLUT::Window*glut_window=GLUT::find_glut_window(current_window))	
-		{
-			if(glut_window->glut_reshape_CB) 
-			{
-				glut_window->glut_reshape_CB(w,h);				
-			}
-
+		{	
 			/***  Now send reshape events to all subwindows  ***/
 			for(UI*ui=GLUI::first_ui();ui;ui=ui->next())		
 			if(current_window==ui->_glut_parent_id) 
 			{
 				glutSetWindow(ui->_glut_window_id);
 				ui->_reshape(w,h);
+			}
+
+			// DO AFTER SUBWINDOWS FOR reshape/get_viewport_area.
+			if(glut_window->glut_reshape_CB) 
+			{
+				glut_window->glut_reshape_CB(w,h);				
 			}
 		}
 		else if(UI*ui=GLUI::find_glui_by_window_id(current_window))

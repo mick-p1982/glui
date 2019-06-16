@@ -1343,8 +1343,6 @@ namespace glui_example_5 //EXAMPLE #5
 
 		xy_aspect = (float)tw/th;
 
-		GLUI_Master.reshape(); //2019 (testing)
-
 		glutPostRedisplay();
 	}
 	

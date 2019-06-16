@@ -31,16 +31,16 @@
 
 #include "../include/glui_internal.h" //"glui_internal_control.h" //PCH
 
-#include <sys/types.h>
-
 #ifdef _WIN32
 #include <windows.h>
+#include <Shlwapi.h> //PathIsRelative
+#pragma comment(lib,"Shlwapi.lib")
 #elif defined(__GNUC__)
 #include <dirent.h>
 #include <unistd.h>
-#endif
-
 #include <sys/stat.h>
+#include <sys/types.h>
+#endif
 
 namespace GLUI_Library
 {//-.
@@ -119,9 +119,15 @@ UI::List *UI::FileBrowser::_list_init(List *l)
 
 bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 {
-	if(chdir)
+	enum{ globN=260 }; //MAX_PATH
+
+	char glob[globN+2]; int n = 0;
+	
+	bool rel,cde = current_dir.empty(); 
+	
+	if(cde) current_dir = "."; if(chdir)
 	{
-		if(d.str)
+		if(!d.empty())
 		{
 			#ifdef _WIN32		
 			if(!SetCurrentDirectoryA(d.str))
@@ -130,16 +136,39 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			#endif
 			return false;
 		}
-		d = "";
+		*glob = '\0'; //d = "";
 	}
-
-	//2019: changing behavior to load current directory.
-	if(!d.str)
+	else if(!d.empty()) 
 	{
-		d = current_dir; /*return;*/ 
+		//2019: Delivering browsing without changing.
 
-		if(!*d.str) d = ".";
+		if(*d.str=='.') switch(d.str[1]) //Special case?
+		{
+		case '\0': goto cd; //.
+
+		case '.': if(d.str[2]) break; //..
+			
+			//Remove directory unless it's a . or .. pattern.
+			size_t sep = current_dir.find_last_of('/');
+			if(sep!=std::string::npos)
+			if(sep&&'.'!=current_dir[sep-1]||sep>1&&'.'!=current_dir[sep-2])
+			{
+				current_dir.erase(sep); goto cd;	
+			}
+		}
+		
+		rel = *d.str!='/';
+		#ifdef _WIN32
+		rel = PathIsRelativeA(d.str);
+		#endif
+		if(rel) n = snprintf(glob,globN,"%s/%s",current_dir.c_str(),d.str);
+		if(!rel) cd2: memcpy(glob,d.str,n=std::min<int>(globN,strlen(d.str))); 
 	}
+	else cd:
+	{
+		d.str = current_dir.c_str(); goto cd2;
+	}	
+	if(cde) current_dir.clear();
 
 	List::Item *i,*di = NULL;
 
@@ -147,10 +176,9 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
    
 	WIN32_FIND_DATAA FN;
 	HANDLE hFind;
-	//char search_arg[MAX_PATH], new_file_path[MAX_PATH];
-	//sprintf(search_arg, "%s\\*.*", path_name);
-
-	hFind = FindFirstFileA("*.*",&FN);
+	memcpy(glob+n,"/*",3);
+	hFind = FindFirstFileA(glob,&FN);
+	glob[n] = '\0';
 	
 	if(hFind==INVALID_HANDLE_VALUE) 
 	goto error;
@@ -186,13 +214,17 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 
 #elif defined(__GNUC__)
 	
-	DIR *dir = opendir(d.str); if(!dir)
+	glob[n] = '\0';
+	DIR *dir = opendir(glob); if(!dir)
 	{
 		perror("fbreaddir"); return false;
 	}
 	else if(list)
 	{
 		list->delete_all(); 
+	
+		int cat = globN-n;
+		glob[n] = '/';
 
 		struct dirent *dirp; 
 		while(dirp=readdir(dir)) /* open directory */
@@ -200,7 +232,8 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			i = new List::Item;
 
 			struct stat dr; /* dir is directory   */
-			if(!lstat(dirp->d_name,&dr)&&S_ISDIR(dr.st_mode)) 
+			strncpy(glob+n+1,dirp->d_name,cat);
+			if(!lstat(glob,&dr)&&S_ISDIR(dr.st_mode)) 
 			{
 				i->text = '/';
 
@@ -210,6 +243,8 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			
 			i->text.append(dirp->d_name);
 		}
+		
+		glob[n] = '\0';
 	}	
 	closedir(dir);
 
@@ -217,13 +252,13 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 
 	if(list)
 	{
-		//Historically FileBrowser assumed id matched get_current_item.
+		//Historically filesys assumed id matched get_current_item.
 		i = list->first_item();
 		for(int id=0;i;i=i->next()) i->id = id++; //back-compat
 	}
 
 	//2019: Why not update this member? And clear file, as in directory.
-	current_dir = d.str; file.clear();
+	current_dir = glob; file.clear();
 	current_chdir = chdir;
 	if(chdir?chdir_cb:lsdir_cb) execute_callback();
 
