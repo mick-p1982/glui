@@ -105,17 +105,23 @@ struct UI::_glut_friends
 		/***  First check if this is main glut window ***/		
 		if(GLUT::Window*glut_window=GLUT::find_glut_window(current_window))	
 		{	
+			bool first = true;
 			/***  Now send reshape events to all subwindows  ***/
 			for(UI*ui=GLUI::first_ui();ui;ui=ui->next())		
 			if(current_window==ui->_glut_parent_id) 
 			{
-				glutSetWindow(ui->_glut_window_id);
-				ui->_reshape(w,h);
+
+		//!!!! WARNING: w/h ARE NOT THIS WINDOW'S REAL SIZE !!!!
+
+				//glutSetWindow(ui->_glut_window_id);
+				ui->_reshape(w,h,first); first = false;
 			}
 
 			// DO AFTER SUBWINDOWS FOR reshape/get_viewport_area.
 			if(glut_window->glut_reshape_CB) 
 			{
+				if(!first)
+				glutSetWindow(current_window);
 				glut_window->glut_reshape_CB(w,h);				
 			}
 		}
@@ -969,9 +975,12 @@ static void glui_reshape_timer(int wid)
 
 	glutSetWindow(gw);
 }
-void UI::_reshape(int reshape_w, int reshape_h)
+void UI::_reshape(int reshape_w, int reshape_h, bool first_subwin)
 {			
-	int gw  = glutGetWindow();
+  //!!!! WARNING: reshape_w/h ARE NOT THIS WINDOW'S REAL SIZE IF
+  //!!!! THIS IS A SUBWINDOW BEING FORWARDED THE PARENT'S EVENT!
+
+	//int gw  = glutGetWindow();
 
 	glutSetWindow(_glut_window_id);
 
@@ -982,15 +991,18 @@ void UI::_reshape(int reshape_w, int reshape_h)
 
 	_pack_controls();
 				 
-	if(_w!=reshape_w||_h!=reshape_h) 
+	if(_w!=reshape_w||_h!=reshape_h) //MAY BE FALSE-POSITIVE! 
 	{
 		glutReshapeWindow(_w,_h);
 	}
-	else if(_flags&SUBWINDOW)
+	/*else*/ if(_flags&SUBWINDOW)
 	{		
-		//2019: Nvidia GLUT isn't able to work like this.
-		//if(_flags&SUBWINDOW) _check_subwindow_position();
-		glutTimerFunc(0,glui_reshape_timer,_glut_parent_id);
+		if(first_subwin)
+		{
+			//2019: Nvidia GLUT isn't able to work like this.
+			//if(_flags&SUBWINDOW) _check_subwindow_position();
+			glutTimerFunc(0,glui_reshape_timer,_glut_parent_id);
+		}
 	}
 
 	//2019: Moving this to _display.
@@ -1002,7 +1014,7 @@ void UI::_reshape(int reshape_w, int reshape_h)
 	//_pending_redisplay = true; glutPostRedisplay();
 	_main_panel->redraw();
 
-	glutSetWindow(gw);
+	//glutSetWindow(gw);
 }
 
 /****************************** GLUI_Main::keyboard() **************/
@@ -1937,7 +1949,9 @@ void UI::refresh()
 {
 	//2019: There was code here, but it was identical to reshape.
 
+	int gw = glutGetWindow();
 	_reshape(_w,_h);
+	glutSetWindow(gw);
 }
 
 /***************** GLUT::get_main_gfx_viewport() ***********/

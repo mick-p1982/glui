@@ -951,7 +951,7 @@ protected:
 	void _special_up(int key);
 	bool _motion(int x, int y);
 	void _passive_motion(int x, int y);
-	void _reshape(int w, int h);
+	void _reshape(int w, int h, bool=true);
 	void _visibility(int state){ /*NOP*/ }
 	void _entry(int state);
 	void _display();
