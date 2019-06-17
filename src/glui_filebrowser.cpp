@@ -136,7 +136,7 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			#endif
 			return false;
 		}
-		*glob = '\0'; //d = "";
+		n = 1; *glob = '.';
 	}
 	else if(!d.empty()) 
 	{
@@ -150,8 +150,7 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			
 			//Remove directory unless it's a . or .. pattern.
 			size_t sep = current_dir.find_last_of('/');
-			if(sep!=std::string::npos)
-			if(sep&&'.'!=current_dir[sep-1]||sep>1&&'.'!=current_dir[sep-2])
+			if(sep!=String::npos&&strcmp("..",&current_dir[sep+1]))
 			{
 				current_dir.erase(sep); goto cd;	
 			}
