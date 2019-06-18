@@ -2015,11 +2015,10 @@ void UI::show(bool sw)
 {
 	int orig = glutGetWindow();
 	glutSetWindow(_glut_window_id); 
-	{
-		(sw?glutShowWindow:glutHideWindow)();
-
-		if(sw) _flags&=~_HIDDEN;
+	{	
+		if(sw) _flags&=~_HIDDEN;		
 		if(!sw) _flags|=_HIDDEN;
+		(sw?glutShowWindow:glutHideWindow)();
 	}
 	if(orig>0) glutSetWindow(orig);
 }

@@ -47,6 +47,10 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 {
 	if(1==stage)
 	{
+		//2019: Technically this is needed for Example #5 or else moving
+		//with XY and then with X or Y will reset the X or Y coordinates.
+		live_type->init_live();
+
 		if(trans_type==XY)
 		{
 			glui_tranlsation_orig_x = float_array_val[0];
@@ -80,7 +84,7 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 			//glutSetCursor(GLUT_CURSOR_LEFT_RIGHT);
 			glui_tranlsation_orig_x = float_array_val[0];
 		}
-		else //if(trans_type==Y) if(trans_type==Z)
+		else //if(trans_type==Y) //if(trans_type==Z)
 		{
 			//glutSetCursor(GLUT_CURSOR_UP_DOWN);
 			glui_tranlsation_orig_yz = float_array_val[0];
@@ -92,6 +96,8 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 		{
 			//if(trans_type==XY)
 			{
+				glui_translation_locked = 0; //LOCK_NONE;
+
 				if(!x) glui_translation_locked = 'X';
 				if(!y) glui_translation_locked = 'Y';
 			}
