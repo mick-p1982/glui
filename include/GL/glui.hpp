@@ -3691,7 +3691,7 @@ public:
 	}
 
 	/** This is a trick to do glutDestroyMenu cleanup without complicating things. */
-	inline ~ListBox(){ _delete_item(_child_head); }
+	inline ~ListBox(){ _delete_item(items_list._child_head); }
 
 protected:
 	
