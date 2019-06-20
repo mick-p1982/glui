@@ -356,6 +356,12 @@ struct UI::_glut_friends
 				//REMINDER: _mouse zeroes prev_click_et.
 				GLUI.prev_click_et = GLUI.curr_click_et;
 				GLUI.curr_click_et = glutGet(GLUT_ELAPSED_TIME);
+			}			
+			else if(GLUI.active_control)
+			{
+				//Redraw just in case curr_cancel_down
+				//removed the responsibility to redraw.
+				GLUI.active_control->redraw();
 			}
 		}		
 		
@@ -1184,7 +1190,7 @@ bool UI::_mouse(int button, int state, int x, int y)
 		{
 			if(TI*tj=dynamic_cast<TI*>(find_control(x,y)))
 			{
-				if(state==GLUT_DOWN)
+				if(state==GLUT_DOWN) //Cut?
 				{
 					ti->key_in('c',GLUT_ACTIVE_CTRL);
 					tj->mouse_down_handler(x,y);

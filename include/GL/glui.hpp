@@ -2299,9 +2299,11 @@ public:
 	  RAISED causes the panel to appear higher than the surroundings.
 	  NONE causes the panel's outline to be invisible.
 	*/
-	explicit Panel(GLUI_ARGS(="", int type=ETCHED,)){ box_type = type; GLUI_INIT; }
-	template<class LV>
-	inline Panel(GLUI_ARGS(,int type, LV *live_var,)){ box_type = type; GLUI_LIVE; }	
+	Panel(GLUI_ARGS(, int type=ETCHED,)){ box_type = type; GLUI_INIT; }		
+	explicit Panel(Node *parent, int type=NONE)
+	{
+		box_type = type; _members_init(); set_parent(parent);
+	}		
 	inline Panel(){ _members_init(false); }
 	inline void _members_init(bool bt=true)
 	{	

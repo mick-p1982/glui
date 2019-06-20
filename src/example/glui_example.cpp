@@ -655,7 +655,7 @@ namespace glui_example_3 //EXAMPLE #3
 			cmd_line = new GLUI_CommandLine(cmd_line_glui,"Command (try 'exit')",NULL,-1,pointer_cb);
 			cmd_line->set_w(400);/** Widen 'command line' control **/
 
-			GLUI_Panel *panel = new GLUI_Panel(cmd_line_glui,"",GLUI_PANEL_NONE);
+			GLUI_Panel *panel = new GLUI_Panel(cmd_line_glui);
 			new GLUI_Button(panel,"Clear History",CMD_HIST_RESET_ID,pointer_cb);
 			new GLUI_Column(panel,false);
 			new GLUI_Button(panel,"Close",CMD_CLOSE_ID,pointer_cb);
@@ -1198,7 +1198,7 @@ namespace glui_example_4 //EXAMPLE #4
 
 		//2019: Removing this (padding?) panel.
 		/*** Add invisible panel to hold rest of controls ***/
-		//GLUI_Panel *panel1 = new GLUI_Panel(glui,"",GLUI_PANEL_NONE);		
+		//GLUI_Panel *panel1 = new GLUI_Panel(glui);
 		GLUI_Panel *panel1 = glui->get_main_panel();
 
 		obj_panel = new GLUI_Panel(panel1,"Objects");
@@ -1216,7 +1216,7 @@ namespace glui_example_4 //EXAMPLE #4
 		scale_spinner->set_float_limits(0.2f,4);
 		scale_spinner->set_alignment(GLUI_ALIGN_RIGHT);
 
-		GLUI_Panel *panel2 = new GLUI_Panel(obj_panel,"",GLUI_PANEL_NONE);
+		GLUI_Panel *panel2 = new GLUI_Panel(obj_panel);
 		new GLUI_Checkbox(panel2,"Sphere",&show_sphere);
 		new GLUI_Column(panel2);
 		new GLUI_Checkbox(panel2,"Torus",&show_torus);
@@ -1962,7 +1962,7 @@ namespace glui_example_6 //EXAMPLE #6
 	{
 		edit = GLUI_Master.create_glui("Help on GLUI Widgets (F6)");
 
-		GLUI_Panel *ep = new GLUI_Panel(edit,"",true);
+		GLUI_Panel *ep = new GLUI_Panel(edit,"");
 		//new GLUI_StaticText(ep,"Widget Information");	
 		hah = new GLUI_List(ep,"Widget Information",true,1,control_cb);
 		hah->add_item(0,"GLUI 2.3");
