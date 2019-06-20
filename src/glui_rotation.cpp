@@ -343,7 +343,7 @@ bool UI::Rotation::_needs_idle()
 
 	//I think mouse_down is gumming the ball up.
 	//return ball?ball->is_mouse_down||ball->is_spinning:false;
-	return ball&&ball->is_spinning;
+	return ball&&ball->is_spinning||this==GLUI::get_pressed();
 }
 
 /****************************** GLUI_Rotation::idle() ***************/

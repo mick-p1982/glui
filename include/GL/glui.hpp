@@ -4420,6 +4420,8 @@ public:
 	}
 };
 
+typedef bool(*Caret_CB)(UI::Control*,int,int,int,bool);
+
 /************************************************************/
 /*                                                          */
 /*                     Master UI Class                      */

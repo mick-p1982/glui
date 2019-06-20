@@ -1777,7 +1777,7 @@ namespace glui_example_6 //EXAMPLE #6
 	  "As seen on the left side of this window.";
 
 	static const char filebrowser[] = 
-	  "FileBrowserWidget\n"
+	  "FileBrowser Widget\n"
 	  "\n"
 	  "As seen in the lower left corner of this window.\n"
 	  "\n"

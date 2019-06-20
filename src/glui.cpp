@@ -764,19 +764,24 @@ static void glui_glutDestroyWindow(int wid)
 {
 	glutDestroyWindow(wid);
 }
+extern void glui_Nvidia_timer(int id)
+{
+	//NOTE: I'm doing this test just to err on caution.
+	//(Nvidia GLUT seems to crash by default.)
+	//if(GLUI::find_glui_by_window_id(id,false))
+	glutPostWindowRedisplay(id);
+}
 static void glui_glutPostWindowRedisplay(int wid)
 {
-	glutPostWindowRedisplay(wid);
+	//Supporting post_update_main_gfx.
+	//glutPostWindowRedisplay(wid);
+	glutTimerFunc(0,glui_Nvidia_timer,wid);
 }
 static int glui_glutGet(unsigned int e)
 {
 	return glutGet(e);
 }
 
-namespace glui_textbox_gl_caret
-{
-	extern bool callback(UI::Control*,int,int,int,bool);
-}
 GLUI::GLUI():_ui_id_counter(1),_edited()
 {
 	_glui_version = GLUI_VERSION;
@@ -793,7 +798,7 @@ GLUI::GLUI():_ui_id_counter(1),_edited()
 	output_callback = NULL; 
 	canvas_callback = NULL; 
 	create_callback = NULL;	
-	caret_callback = glui_textbox_gl_caret::callback;
+	caret_callback = NULL;
 
 	_spin_growth = 0; //1;
 	_spin_growth_exp = GLUI_SPIN_DEFAULT_GROWTH_EXP;
@@ -1496,6 +1501,7 @@ int UI::_set_current_draw_buffer()
 
 /************************************* GLUI_Main::activate_control() *********/
 
+extern Caret_CB glui_textbox_caret_cb();
 bool UI::activate_control(Control *control, int how)
 {
 	if(!how) //deactivate_current_control
@@ -1527,9 +1533,8 @@ bool UI::activate_control(Control *control, int how)
 		if(this==GLUI.active_control_ui)
 		{
 			//NEW: Manage caret to simplify text objects.
-			GLUI.prev_caret_pt = GLUI.curr_caret_pt = -1;
-			if(GLUI.caret_callback)
-			GLUI.caret_callback(control,0,0,0,!control->enabled);	
+			GLUI.prev_caret_pt = GLUI.curr_caret_pt = -1;			
+			glui_textbox_caret_cb()(control,0,0,0,!control->enabled);	
 
 			/*  printf("deactivate: %d\n",glutGetWindow()); */
 			GLUI.active_control = NULL;

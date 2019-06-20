@@ -233,8 +233,9 @@ bool Mouse_Interface::_special_handler(int key, int modifiers)
 
 	if(drag_x||drag_y)
 	{
-		//HACK: Visualize arraow key?
-		GLUI.spacebar_is_down = true; 
+		//HACK: Visualize arrow key?
+		if(!GLUI.wheel_event)
+		GLUI.spacebar_is_down = true; 		
 
 		glui_mouse_iaction_special = true;		
 		GLUI::Click

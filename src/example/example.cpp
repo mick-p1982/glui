@@ -45,7 +45,11 @@ static LRESULT CALLBACK win_proc(HWND hw, UINT msg, WPARAM w, LPARAM l, UINT_PTR
 {
 	switch(msg)
 	{
- 	case WM_MOUSEWHEEL:
+ 	//NOTE: I'm not trying to support Logitech horizontal
+	//mouse. It used to have hacks (see below) but at the
+	//moment Windows 10 isn't working. I think its driver
+	//blocks messages except for the ones it's generating.
+ 	case WM_MOUSEWHEEL: case WM_MOUSEHWHEEL: 
 	{
 		GLUI_Library::UI *ui;
 		(LONG_PTR&)ui = GetWindowLongPtr(hw,GWLP_USERDATA);
@@ -53,16 +57,24 @@ static LRESULT CALLBACK win_proc(HWND hw, UINT msg, WPARAM w, LPARAM l, UINT_PTR
 
 		short delta = GET_WHEEL_DELTA_WPARAM(w);
 		assert(0==delta%WHEEL_DELTA);
+
+		if(!delta) break; //fake
 		
 		int cm = w&MK_SHIFT?ui->WHEEL_SHIFT:0; 
 		if(w&MK_CONTROL) cm|=ui->WHEEL_CTRL;
-		//if(w&MK_ALT) cm|=ui->WHEEL_HORZ;
-		if(GetKeyState(VK_MENU)<0) cm|=ui->WHEEL_HORZ;
+		if(msg==WM_MOUSEHWHEEL)
+		cm|=ui->WHEEL_HORZ;
+		//if(w&MK_ALT) cm^=ui->WHEEL_HORZ;
+		if(GetKeyState(VK_MENU)<0) cm^=ui->WHEEL_HORZ;
 		POINT pt = {GET_X_LPARAM(l),GET_Y_LPARAM(l)};
 		MapWindowPoints(0,hw,&pt,1);
 		ui->wheel(delta/-WHEEL_DELTA,pt.x,pt.y,cm);
 
-		break;
+		//Returning 1 is an old Logitech trick. It works
+		//but right now the picture cannot redraw itself. 
+		//That's worse than not working at all.
+		//return 1; 
+		return 0; 
 	}}		
 	return DefSubclassProc(hw,msg,w,l);
 }

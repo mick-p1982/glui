@@ -147,6 +147,12 @@ namespace glui_textbox_gl_caret
 	}
 }
 
+extern Caret_CB glui_textbox_caret_cb()
+{
+	Caret_CB ccb = GLUI.caret_callback;
+	return ccb?ccb:&glui_textbox_gl_caret::callback;	
+}
+
 void UI::Control::pos_caret(int h, int x, int y)
 {	
 	int m[4]; get_margin_dims(m);
@@ -192,8 +198,8 @@ void UI::Control::pos_caret(int h, int x, int y)
 		}
 	}
 	else h = 0;
-				   
-	if(!GLUI.caret_callback||GLUI.caret_callback(this,h,cx,cy,!enabled)) 
+				
+	if(glui_textbox_caret_cb()(this,h,cx,cy,!enabled)) 
 	{
 		if(h>0) goto draw;
 	}

@@ -314,6 +314,8 @@ inline void UI::post_update_main_gfx()
 	//NOTE: Nvidia GLUT fires this off before returning
 	//unless it's set to a 100ms timer. output_callback
 	//is echoed by execute_callback to flush the render.
+	//MORE: cdecl_glutPostWindowRedisplay is being made 
+	//into a timer so it can be used at any time safely.
 	GLUT::cdecl_glutPostWindowRedisplay(_glut_escape_id);
 }
 static void glui_update_main_gfx(UI::Control *c, bool)
