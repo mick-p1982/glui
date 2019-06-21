@@ -145,7 +145,7 @@ install(
 install(
     DIRECTORY "${CMAKE_SOURCE_DIR}/include/"
     DESTINATION "${include_install_dir}"
-    FILES_MATCHING PATTERN "*.h"
+    FILES_MATCHING PATTERN "glui.h*"
 )
 
 

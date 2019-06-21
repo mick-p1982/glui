@@ -41,6 +41,12 @@ static HWND win_created = NULL;
 //This used to not be necessary before I switched icons???
 static WPARAM win_icon = (WPARAM)
 LoadIconA(GetModuleHandle(0),MAKEINTRESOURCEA(101)); //IDI_ICON1
+static BOOL CALLBACK HWheelLogitech(HWND hw, LPARAM)
+{
+	GLUI_Library::UI *ui;
+	(LONG_PTR&)ui = GetWindowLongPtr(hw,GWLP_USERDATA);
+	if(!ui) InvalidateRect(hw,0,0); return TRUE;
+}
 static LRESULT CALLBACK win_proc(HWND hw, UINT msg, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR)
 {
 	switch(msg)
@@ -58,8 +64,6 @@ static LRESULT CALLBACK win_proc(HWND hw, UINT msg, WPARAM w, LPARAM l, UINT_PTR
 		short delta = GET_WHEEL_DELTA_WPARAM(w);
 		assert(0==delta%WHEEL_DELTA);
 
-		if(!delta) break; //fake
-		
 		int cm = w&MK_SHIFT?ui->WHEEL_SHIFT:0; 
 		if(w&MK_CONTROL) cm|=ui->WHEEL_CTRL;
 		if(msg==WM_MOUSEHWHEEL)
@@ -70,11 +74,18 @@ static LRESULT CALLBACK win_proc(HWND hw, UINT msg, WPARAM w, LPARAM l, UINT_PTR
 		MapWindowPoints(0,hw,&pt,1);
 		ui->wheel(delta/-WHEEL_DELTA,pt.x,pt.y,cm);
 
-		//Returning 1 is an old Logitech trick. It works
-		//but right now the picture cannot redraw itself. 
-		//That's worse than not working at all.
-		//return 1; 
-		return 0; 
+		//LOGITECH COMPANY
+		//This is a well known Logitech bug.
+		//Hopefully it won't affect other companies' mice adversely.
+		if(msg==WM_MOUSEHWHEEL)
+		{
+			//This function is needed because GLUT isn't processing
+			//messages. Perhaps Logitech is processing the messages.
+			EnumThreadWindows(GetCurrentThreadId(),HWheelLogitech,0);
+			return 1; 
+		}
+		
+		return 0;
 	}}		
 	return DefSubclassProc(hw,msg,w,l);
 }
