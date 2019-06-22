@@ -83,7 +83,7 @@ bool UI::List::_mouse_down_handler(int local_x, int local_y)
 	//The constructor took a live-variable. This was
 	//copied from the EditText or EditBox class, and
 	//not implemented.
-	if(ptr_val) 
+	//if(ptr_val)  
 	{
 		Item *item = get_line_ptr(curr_line);
 		set_text(item?item->text:NULL);

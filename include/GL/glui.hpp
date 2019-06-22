@@ -3419,26 +3419,6 @@ public:	//Note: This doesn't have to use Interface.
 		}
 		template<class T>
 		inline bool operator!=(const T &cmp){ return !operator==(cmp); }
-
-		template<class T> 
-		inline Item *_find_ptr(const T &cmp)
-		{
-			Item *i; for(i=this;i&&*i!=cmp;i=i->next()); return i; 
-		}		
-
-		template<class T> 
-		inline int _count(const T &cmp)
-		{
-			Item *i = this; for(int j=0;i;j++) if(*i!=cmp)
-			{
-				i = i->next(); j++;
-			}
-			else return j; return -1; 
-		}		
-		inline Item *_line(size_t l)
-		{
-			Item *i; for(i=this;i&&l-->0;i=i->next()); return i; 
-		}
 	};
 
 	Node items_list;
@@ -3478,9 +3458,9 @@ public:
 	inline int get_line_num(const T &cmp)
 	{
 		Item *i = first_item();
-		for(int j=0;i;j++) if(*i!=cmp)
+		for(int j=0;i;) if(*i!=cmp)
 		{
-			i = i->next(); j++;
+			j++; i = i->next();
 		}
 		else return j; return -1; 
 	}
