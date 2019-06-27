@@ -589,6 +589,8 @@ void UI::_init(const char *text, int subpos, int x, int y, int parent_window)
 												
 	//WARNING: order depends on GLUT state calls
 	old_glut_window = glutGetWindow();
+	int _dm = glutGet(GLUT_INIT_DISPLAY_MODE);
+	glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE);
 	if(~subpos&SUBWINDOW) 
 	{
 		/* not a subwindow, creating a new top-level window */
@@ -601,8 +603,7 @@ void UI::_init(const char *text, int subpos, int x, int y, int parent_window)
 				ix = glutGet(GLUT_INIT_WINDOW_X);
 				iy = glutGet(GLUT_INIT_WINDOW_Y);
 				glutInitWindowPosition(x,y);
-			}
-			glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE);
+			}			
 			_glut_window_id = glutCreateWindow(window_name.c_str());
 			if(x>=0||y>=0)
 			{
@@ -637,6 +638,7 @@ void UI::_init(const char *text, int subpos, int x, int y, int parent_window)
 		assert(0);
 		glutSetWindow(_glut_window_id);
 	}		
+	glutInitDisplayMode(_dm);
 	//setup_default_glut_callbacks();	
 	{
 		//glutSetWindow(_glut_window_id);

@@ -103,8 +103,8 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 			}
 		}
 
-		float xf = +speed*(x+x_center()-GLUI.down_x);
-		float yf = -speed*(y+y_center()-GLUI.down_y);
+		double xf = +speed*(x+x_center()-GLUI.down_x);
+		double yf = -speed*(y+y_center()-GLUI.down_y);
 
 		switch(GLUI.curr_modifiers)
 		{

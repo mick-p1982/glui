@@ -255,8 +255,7 @@ void Arcball::mouse_motion(int x, int y, double shift, bool cx, bool cy)
 	/* Set the X constraint if CONTROL key is pressed, Y if ALT key */
 	//set_constraints(ctrl,alt);	
 
-	float unshift = radius; 
-
+	double unshift = radius;
 	if(shift) radius*=shift; 
 
 	if(cx&&cy) //2019

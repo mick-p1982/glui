@@ -1474,6 +1474,8 @@ public: //Retired interfaces
 	#endif
 
 	inline int get_int_val(){ return int_val; }
+	
+	inline const char *get_text(){ return text.c_str(); }
 
 	inline double get_float_val(){ return float_val; }
 
@@ -2707,8 +2709,6 @@ public:
 
 	inline int get_line_height(){ return font.height; }
 	
-	inline const char *get_text(){ return text.c_str(); }
-
 	inline int get_char_count(){ return (int)text.size(); }
 	 
 	inline int sel_min(){ return std::min(sel_start,sel_end); }
@@ -2957,9 +2957,7 @@ public:
 	LINKAGE void do_click();
 	LINKAGE void do_drag(int x, int y);	
 	LINKAGE int find_arrow(int local_x, int local_y);
-
-	inline const char *get_text(){ return edittext->text.c_str(); }
-
+	
 	enum /***** Limit types - how to limit spinner values ********/
 	{
 		//Note: glui_edittext.cpp implements these

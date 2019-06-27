@@ -56,10 +56,15 @@ void UI::FileBrowser::_update_size()
 			list = NULL; return;
 		}
 		int dh = h;
+		bool expand = ALIGN_EXPAND==alignment;
 		assert(this==list->parent());
-		int dw = w-list->has_parent()->w;
+		//int dw = w-list->has_parent()->w;
+		int dw = expand?w:0;
 		inset_dims(&dw,&dh);		
-		list->w+=dw; list->h = dh;
+		if(expand) list->w = dw;
+		else list->w+=dw;
+		list->h = dh;
+		list->update_size();
 	}
 }
 

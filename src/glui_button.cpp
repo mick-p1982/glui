@@ -100,11 +100,11 @@ void UI::Button::_draw()
 
 void UI::Button::_update_size()
 {
-	int lineup = 16;
+	enum{ lineup=20 };
 	int text_size = string_width(name)+lineup;
 	text_size = lineup*int(text_size/(float)lineup+0.5f);
 
-	w = std::max(w,text_size+16);
+	w = std::max(w,text_size+lineup/2);
 
 	if(w%2==0) w++; //Odds squares focus rect.
 }

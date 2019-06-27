@@ -674,7 +674,7 @@ namespace glui_example_3 //EXAMPLE #3
 		{
 			/*** User typed text into the 'command line' window ***/
 			printf("Command (%d): %s\n",counter,cmd_line->get_text());
-			std::string text = cmd_line->get_text();
+			std::string &text = cmd_line->text;
 			if(text=="exit"||text=="quit")
 			{
 				goto exit; //exit(0); //Close window instead of Quit.
@@ -1708,8 +1708,7 @@ namespace glui_example_6 //EXAMPLE #6
 	static GLUI *edit; //int main_window;
 	static int num_display  = 0;
 	static int num_format  = 0;
-	static int enable_textbox_checked = 1;
-	static GLUI_StaticText  *text;
+	static int enable_textbox_checked = 1;	
 	static GLUI_List        *hah;
 	static GLUI_TextBox     *moo;
 	static GLUI             *tree;
@@ -1841,18 +1840,13 @@ namespace glui_example_6 //EXAMPLE #6
 			GLUI_String text;
 			std::string file_name;
 			FILE *file;
-			int i = 0;
 			file_name = "";
 			file_name = fb->get_file();
 			file = fopen(file_name.c_str(),"r");
 			if(file)
 			{
-				char c; do
-				{
-					c = getc(file);
-					text+=c;
-					i++;
-				}while(c!=EOF);
+				for(int c;EOF!=(c=getc(file));)
+				text+=(char)c;
 				fclose(file);
 			}
 			else printf("Error opening file\n");
