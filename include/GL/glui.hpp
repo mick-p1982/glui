@@ -515,7 +515,9 @@ public:
  The nodes are traversed for event processing, sizing, redraws, etc.
 */
 class Node 
-{	
+{
+	/* Prevent copying. */
+	Node(const Node&);	
 public:
 	
 	friend class UI;
@@ -2500,7 +2502,7 @@ public:
 		set_int_val((int)val); else set_float_val((double)val);
 	}
 	
-	inline void set_speed(double scale_factor){ speed = scale_factor; };
+	inline void set_speed(double scale_factor){ speed = scale_factor; }
 
 	//TODO: The "growth" should deplete with elapsed time.
 	//And somehow wheel events should manage reset_growth.
@@ -3162,7 +3164,9 @@ public:
 	the history. In both cases the returned value is false and
 	the history is unamended. */
 	LINKAGE bool add_to_history(C_String displacing_command);
+	
 	inline void reset_history(){ _members_init(); }
+	
 	inline bool scroll_history(int direction)
 	{
 		return recall_history(curr_hist+direction);
@@ -3716,7 +3720,7 @@ public:
 	
 	LINKAGE bool lsdir(C_String="", bool chdir=false);	
 
-	inline void chdir(C_String str){ lsdir(str,true); }
+	inline bool chdir(C_String str){ return lsdir(str,true); }
 
 	inline const char *get_file(){ return file.c_str(); }
 

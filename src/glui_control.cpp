@@ -188,7 +188,7 @@ void UI::Control::_align_control()
 			/***   Shift (proportionally) all child columns   ***/
 			for(;ch;ch=ch->next()) if(dynamic_cast<Column*>(ch)) 
 			{
-				float p = ch->x_abs-x_abs; p = p/w*cw;
+				float p = float(ch->x_abs-x_abs)/w*cw;
 
 				//min is worried about columns on the outer edge.
 				//There aren't good reasons to put tack a Column

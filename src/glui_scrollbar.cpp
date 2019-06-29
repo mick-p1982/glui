@@ -436,13 +436,15 @@ int UI::ScrollBar::find_arrow(int local_x, int local_y)
 	{	
 		int pos = UI_SCROLL_ARROW_SIZE+_box_pos();
 						
-		if(y>=0&&y<=pos)
+		//if(y>=0&&y<=pos) //Fights.
+		if(y>=0&&y<pos-1)
 		{
 			//FIX ME
 			//return STATE_UP;
 			return horizontal?STATE_DOWN:STATE_UP; //WHY DIFFER?????
 		}
-		if(y>=pos+_box_len()&&y<=(hh+UI_SCROLL_ARROW_SIZE))
+		//if(y>=pos+_box_len()&&y<=(hh+ui_bar_arrow_size)) //Fights.
+		if(y>pos+_box_len()+1&&y<=(hh+ui_bar_arrow_size))
 		{
 			//FIX ME
 			//return STATE_DOWN;

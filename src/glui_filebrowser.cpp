@@ -128,18 +128,34 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 
 	char glob[globN+2]; int n = 0;
 	
-	bool rel,cde = current_dir.empty(); 
+	bool cde = current_dir.empty();
 	
+	bool rel; if(d.str)
+	{	
+		rel = *d.str!='/';
+		#ifdef _WIN32
+		rel = PathIsRelativeA(d.str);
+		#endif
+	}
+	else rel = true;
+			        
 	if(cde) current_dir = "."; if(chdir)
 	{
-		if(!d.empty())
+		const char *cd = d.str; if(rel&&!cde)
+		{
+			//Mixing lsdir and chdir?
+			if(!cd||!*cd) cd = ".";
+			sprintf(glob,"%s/%s",current_dir.c_str(),cd);
+			cd = glob;
+		}
+		if(cd&&*cd/*&&strcmp(cd,".")*/)
 		{
 			#ifdef _WIN32		
-			if(!SetCurrentDirectoryA(d.str))
+			if(!SetCurrentDirectoryA(cd))
 			#elif defined(__GNUC__)		
-			if(::chdir(d.str))
+			if(::chdir(cd))
 			#endif
-			return false;
+			return false;			
 		}
 		n = 1; *glob = '.';
 	}
@@ -149,7 +165,7 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 
 		if(*d.str=='.') switch(d.str[1]) //Special case?
 		{
-		case '\0': goto cd; //.
+		case '\0': goto relist; //.
 
 		case '.': if(d.str[2]) break; //..
 			
@@ -157,20 +173,18 @@ bool UI::FileBrowser::lsdir(C_String d, bool chdir)
 			size_t sep = current_dir.find_last_of('/');
 			if(sep!=String::npos&&strcmp("..",&current_dir[sep+1]))
 			{
-				current_dir.erase(sep); goto cd;	
+				current_dir.erase(sep); goto relist; //HACK	
 			}
 		}
-		
-		rel = *d.str!='/';
-		#ifdef _WIN32
-		rel = PathIsRelativeA(d.str);
-		#endif
-		if(rel) n = snprintf(glob,globN,"%s/%s",current_dir.c_str(),d.str);
-		if(!rel) cd2: memcpy(glob,d.str,n=std::min<int>(globN,strlen(d.str))); 
+				
+		if(rel) n = 
+		snprintf(glob,globN,"%s/%s",current_dir.c_str(),d.str);
+		else relist2: 
+		memcpy(glob,d.str,n=std::min<int>(globN,strlen(d.str))); 
 	}
-	else cd:
+	else relist:
 	{
-		d.str = current_dir.c_str(); goto cd2;
+		d.str = current_dir.c_str(); goto relist2;
 	}	
 	if(cde) current_dir.clear();
 
