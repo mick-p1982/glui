@@ -165,7 +165,7 @@ bool UI::Spinner::_mouse_down_handler(int local_x, int local_y)
 	//if(data_type==SPIN_INT)	
 	//if(double step=state==STATE_UP?1:STATE_DOWN?-0.9:0) //0.9???
 	//{
-	//	set_float_val(float_val+step); 
+	//	set_val(float_val+step); 
 	//}
 	
 	glui_spinner_cogwheel = 0;
@@ -440,7 +440,7 @@ void UI::Spinner::do_click()
 		
 		/** Remember, edittext mirrors the float and int values ***/
 
-		set_float_val(new_val);
+		set_val(new_val);
 	}
 
 	if(cmp!=float_val) do_callbacks();
@@ -467,7 +467,7 @@ void UI::Spinner::do_drag(int x, int y)
 		/** Remember, edittext mirrors the float and int values ***/
 
 		double incr = _growth()*delta_y*cm_factor*speed;
-		set_float_val(float_val+incr);
+		set_val(float_val+incr);
 	}
 
 	//_last_x = x; 

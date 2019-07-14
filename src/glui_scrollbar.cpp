@@ -58,7 +58,7 @@ void UI::ScrollBar::_members_init()
 	can_activate = true;
 	spacebar_mouse_click = false; //2019
 	
-	val_end = val_start = 0;
+	val_start = val_end = 0;
 	associated_object = NULL;
 	//last_update_time = 0;
 	//velocity_limit = 50; /* Change value by at most 50 per second */
@@ -443,8 +443,8 @@ int UI::ScrollBar::find_arrow(int local_x, int local_y)
 			//return STATE_UP;
 			return horizontal?STATE_DOWN:STATE_UP; //WHY DIFFER?????
 		}
-		//if(y>=pos+_box_len()&&y<=(hh+ui_bar_arrow_size)) //Fights.
-		if(y>pos+_box_len()+1&&y<=(hh+ui_bar_arrow_size))
+		//if(y>=pos+_box_len()&&y<=(hh+UI_SCROLL_ARROW_SIZE)) //Fights.
+		if(y>pos+_box_len()+1&&y<=(hh+UI_SCROLL_ARROW_SIZE))
 		{
 			//FIX ME
 			//return STATE_DOWN;
@@ -522,7 +522,7 @@ void UI::ScrollBar::do_click()
 	//set_float_val also sets int_val. Might as well make
 	//it official...
 	if(0&&data_type==SPIN_INT) set_int_val((int)new_val);
-	if(1||data_type==SPIN_FLOAT)*/set_float_val(new_val);
+	if(1||data_type==SPIN_FLOAT)*/set_val(new_val);
 
 	//printf("do_click: incr %f  val=%f  float_val=%f\n",incr,new_val,float_val);
 
@@ -568,15 +568,7 @@ void UI::ScrollBar::do_drag(int x, int y)
 
 	double cmp = float_val;
 
-	if(data_type==SPIN_INT)
-	{
-		set_int_val((int)new_val);
-	}
-	else if(data_type==SPIN_FLOAT)
-	{
-		set_float_val(new_val);
-	}
-	else assert(data_type==SPIN_FLOAT);
+	set_val(new_val);
 
 	if(cmp!=float_val) do_callbacks();
 }
@@ -595,18 +587,7 @@ void UI::ScrollBar::_update_live()
 		if(new_val>hi) new_val = hi;
 		if(new_val<lo) new_val = lo;
 
-		if(new_val!=float_val) 
-		{
-			if(data_type==SPIN_INT)
-			{
-				set_int_val((int)new_val);
-			}
-			else if(data_type==SPIN_FLOAT)
-			{
-				set_float_val(new_val);
-			}
-			else assert(data_type==SPIN_FLOAT);
-		}
+		set_val(new_val);
 	}
 
 	_update_size();	
@@ -653,8 +634,7 @@ void Spin_Interface::set_range(double start, double end)
 	val_start = start; val_end = end;
 
 	// Allow for possiblitly of reversed limits
-	double lo = val_min(); if(float_val<lo) set_float_val(lo);
-	double hi = val_max(); if(float_val>hi) set_float_val(hi);
+	set_val(std::min(val_max(),std::max(val_min(),float_val)));
 
 	update_size();
 }

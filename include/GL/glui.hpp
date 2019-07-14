@@ -631,7 +631,7 @@ inline void glui_sort_node(Node &node, bool(*pred)(T*,T*), int depth)
 /************************************************************/
 
 /**
- The main user-visible interface object to UI. 
+ The main user-visible interface object to GLUI. 
 */
 class UI : public Node
 {	
@@ -718,15 +718,16 @@ public:
 	{
 		//2019: Making this more extensible/manageable.
 		//Update_CB _idCB; Control_CB _objCB;
-		int _sig; Update_CB _cb;
+		int _sig; Void_CB _cb;
 
 	public:
 	
 		CB():_sig(),_cb(){}
-		CB(Update_CB cb):_sig(1),_cb((Update_CB)cb)
+		CB(Void_CB cb):_sig(-1),_cb(cb){}
+		CB(Update_CB cb):_sig(1),_cb((Void_CB)cb)
 		{}
 		template<class T> //NEW
-		CB(void(*cb)(T*)):_cb((Update_CB)cb)
+		CB(void(*cb)(T*)):_cb((Void_CB)cb)
 		{
 			//Type 3 is not used, but may be helpful to figure
 			//out if the callback is specialized.
@@ -739,7 +740,7 @@ public:
 		}
 		//Needed because MSVC2010 thinks "typename Control" 
 		//is the constructor. It doesn't require & decoration.
-		CB(Control_CB cb):_sig(2),_cb((Update_CB)cb)
+		CB(Control_CB cb):_sig(2),_cb((Void_CB)cb)
 		{}
 
 		/** This control just activated. Fire our callback.*/
@@ -1975,6 +1976,7 @@ inline void UI::CB::operator()(Control *ctrl)const
 {
 	switch(_sig)
 	{
+	case -1: _cb(); break;
 	case 1: ((Update_CB)_cb)(ctrl->id); break;
 	case 2:
 	case 3: ((Control_CB)_cb)(ctrl); break;
@@ -3015,6 +3017,8 @@ public:
 		case UI_LIVE_DOUBLE:
 		data_type   = SPIN_FLOAT;		
 		}
+
+		val_start = val_end = 0; //NEW: Not sure what to do.
 	}
 	inline void _dynamic_init(Node* &parent)
 	{

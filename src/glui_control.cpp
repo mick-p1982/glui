@@ -698,10 +698,6 @@ void UI::Control::execute_callback()
 {
 	CB *cb; if(!*(cb=&callback)) //2019
 	{
-		//Mainly want to filter out -1 however as a feature
-		//other negative values can be used to disable this.
-		if(id<0) return;
-
 		if(!ui||!*(cb=&ui->active_callback))
 		{
 			if(!*(cb=&GLUI.active_callback))
