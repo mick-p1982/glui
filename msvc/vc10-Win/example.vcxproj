@@ -87,10 +87,10 @@
     <None Include="..\..\bin\Win32\Win95.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\src\example\example.rc" />
+    <ClInclude Include="..\..\src\example\resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\example\resource.h" />
+    <ResourceCompile Include="..\..\src\example\vstudio.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -56,7 +56,6 @@
 #include <cstring>
 #include <cassert>
 #include <climits> //INT_MAX
-#include <cfloat> //DBL_MAX
 #include <string>
 #include <algorithm>
 
@@ -997,9 +996,9 @@ public:
 
 	//Supports create_callback.
 	#ifndef GLUI_USER_TYPE
-	#define GLUI_USER_TYPE void
-	GLUI_USER_TYPE *user;
+	#define GLUI_USER_TYPE void*
 	#endif
+	GLUI_USER_TYPE user;
 
 	/** This is a default callback for controls without one. */
 	CB active_callback; 
@@ -2921,7 +2920,7 @@ public:
 		default: dt = UI_EDIT_TEXT;
 		has_limits            = LIMIT_CLAMP;	
 		limits1               = 1;
-		limits2               = DBL_MAX;
+		limits2               = INT_MAX;
 		}
 		data_type             = dt;							
 	}	
@@ -3679,7 +3678,7 @@ public:
 	}
 
 	/** This is a trick to do glutDestroyMenu cleanup without complicating things. */
-	inline ~ListBox(){ _delete_item(items_list._child_head); }
+	inline ~ListBox(){ _delete_item(NULL); }
 
 protected:
 	

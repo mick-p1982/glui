@@ -41,13 +41,16 @@ String &glui_format_str(String &str, const char *fmt,...)
 	size_t bufsz = ISIZE;
 	char *buf = stackbuf;
 
-	str.clear(); //str = "";
-	va_list arg; for(;;)
+	int len; va_list arg; for(;;)
 	{
 		va_start(arg,fmt);
-		int ret = vsnprintf(buf,bufsz-1,fmt,arg);
+		#ifdef _WIN32 //stdio.h
+		len = _vsprintf_p(buf,bufsz,fmt,arg);
+		#else
+		len = vsnprintf(buf,bufsz,fmt,arg);
+		#endif
 		va_end(arg);
-		if(ret>=0) break;
+		if(len>=0) break;
 
 		// else make a bigger buf, try again
 		bufsz*=2; if(buf==stackbuf) 
@@ -57,7 +60,7 @@ String &glui_format_str(String &str, const char *fmt,...)
 		else buf = (char*)realloc(buf,sizeof(char)*bufsz);
 	}
 
-	if(buf!=stackbuf) free(buf); return str = buf; 
+	str.assign(buf,len); if(buf!=stackbuf) free(buf); return str;
 }
 
 //---.

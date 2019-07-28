@@ -108,19 +108,19 @@ void Window::set_font(void *new_font, bool recurse)
 		for(int i=32;i<256;i++)		
 		w[i] = 0xFF&glutBitmapWidth(new_font,i);		
 	}
-
-	const_cast<Font&>(font) = _glut_fonts[i]; 
-	
-	if(c)
+		
+	if(c) //Want to be sure this cast works with GCC.
 	{
 		//GCC treats this as &Window::font, which just
 		//seems wrong, since Control is in the name...
 		//and Window is not even a direct base class.
 		//if(recurse) c->set(&UI::Control::font,font);
-		if(recurse) c->set((Font UI::Control::*)&UI::Control::font,font);
+		//if(recurse) 
+		c->set((Font UI::Control::*)&UI::Control::font,_glut_fonts[i],recurse);
 
 		c->redraw();
 	}
+	const_cast<Font&>(font) = _glut_fonts[i]; 
 }
 
 /********** GLUI_Control::draw_string() ************/

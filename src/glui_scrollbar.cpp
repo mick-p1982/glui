@@ -589,8 +589,6 @@ void UI::ScrollBar::_update_live()
 
 		set_val(new_val);
 	}
-
-	_update_size();	
 }
 
 /************************************ GLUI_Scrollbar::update_size() **********/

@@ -190,13 +190,13 @@ void UI::EditText::_update_size()
 
 	//int dw = w; //Not working out.
 
-	int delta,text_size = string_width(name);
+	int delta,text_size = string_width(name)+UI_XOFF;
 
 	if(text_size)
 	{
-		if(x_lr<text_size+2)
+		if(x_lr<text_size)
 		{
-			delta = text_size+2-x_lr;
+			delta = text_size-x_lr;
 		}
 		else delta = 0;
 

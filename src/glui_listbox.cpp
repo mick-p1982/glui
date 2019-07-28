@@ -151,7 +151,7 @@ void UI::ListBox::_draw()
 inline bool UI::ListBox::_recalculate_item_width()
 {		 
 	/* Find the title size */
-	x_lr = string_width(name)+UI_XOFF+1; //NEW (May want to put name on top?)
+	x_lr = string_width(name)+UI_XOFF; //NEW (May want to put name on top?)
 
 	/* Find the longest item string ***/
 	int item_text_size = 0;
@@ -192,20 +192,22 @@ bool UI::ListBox::_add_item(Item *new_node)
 	{
 		_last_int_val = ~new_node->id; /** Different than id **/
 
-		do_selection(new_node->id); goto repack;
+		do_selection(new_node->id);
 	}
-
-	if(_recalculate_item_width()) repack:
-	{
-		_post_repack(); /* ui->refresh(); */
-	}
-	return true;
+	_post_repack(); return true;
 }
 
 /************************************** GLUI_Listbox::delete_item() **********/
 
 bool UI::ListBox::_delete_item(Node *ptr)
 {
+	//REMINDER: ~ListBox destructor will _delete_item(NULL)
+	//in order to release the GLUT menu resource.
+	if(glut_menu_id>0)
+	{
+		glutDestroyMenu(glut_menu_id);
+		glut_menu_id = -1;
+	}
 	if(!ptr) return false;
 
 	if(ptr->parent()==&items_list)
@@ -217,12 +219,6 @@ bool UI::ListBox::_delete_item(Node *ptr)
 		_delete_all();
 	}
 	else return false;
-
-	if(glut_menu_id>0)
-	{
-		glutDestroyMenu(glut_menu_id);
-		glut_menu_id = -1;
-	}
 		
 	if(_recalculate_item_width()) 
 	{

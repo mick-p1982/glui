@@ -18,6 +18,7 @@ message(STATUS "Installing to ${CMAKE_INSTALL_PREFIX}")
 option(GLUI_BUILD_EXAMPLES "Include glui_example to launch demo" ON)
 option(GLUI_READLINE_MODIFIERS "Restore Unix's Readline key bindings" OFF)
 option(GLUI_DEBUG_STDOUT "Restore (dump) debug output feature" OFF)
+option(GLUI_DLL "Cygwin has to disable this for static linkage" ON)
 
 if(GLUI_BUILD_EXAMPLES)
 	add_definitions(-DGLUI_BUILD_EXAMPLES)
@@ -31,7 +32,9 @@ endif()
 
 #Is this good enough for static builds??
 if(WIN32 OR CYGWIN)
+if(GLUI_DLL)
 	add_definitions(-DGLUI_DLL)
+endif()
 endif()
 
 ####BUILD/INSTALL###############################
@@ -95,10 +98,22 @@ target_link_libraries(ppm2array)
 if(GLUI_BUILD_EXAMPLES)
 
 	file(GLOB example_files "src/example/example.*")
-	set_source_files_properties(example.rc PROPERTIES LANGUAGE RC)
+	#set_source_files_properties(example.rc PROPERTIES LANGUAGE RC)
+	if(CYGWIN)
+	#Cygwin windres won't handle the UTF16-LE files VS exclusively uses!
+	set(rc_file "src/example/windres.rc")
+	else()
+	set(rc_file "src/example/vstudio.rc")
+	endif()
 
-	add_executable(example ${example_files})
+	add_executable(example ${example_files} ${rc_file})
+	
+	#USE static ON NON Windows SYSTEMS?
+	if(GLUI_DLL)
+	target_link_libraries(example glui ${glui_libs})
+	else()
 	target_link_libraries(example glui_static ${glui_libs})
+	endif()
 
 endif()
 
