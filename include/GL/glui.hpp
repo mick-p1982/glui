@@ -132,20 +132,20 @@ UI_MOUSE_IACTION_HEIGHT    =  50+21, //RADIUS+HEADER
 UI_SPINNER_ARROW_WIDTH     =  12,
 UI_SPINNER_ARROW_HEIGHT    =   8,
 UI_SPINNER_ARROW_Y         =   2, //2019: border of EditText
-				   				
-/************* Textbox and List Defaults - JVK ******************/
-UI_TEXTBOX_HEIGHT          = 130,
-UI_TEXTBOX_WIDTH           = 130,
-UI_LIST_HEIGHT             = 130,
-UI_LIST_WIDTH              = 130,
-//UI_TAB_WIDTH               =  50, /* In pixels */
-UI_TEXTBOX_MIN_TEXT_WIDTH  =  50,
-UI_LIST_MIN_TEXT_WIDTH     =  50,
 
 /******************* UI ScrollBar Defaults - JVK ***************************/
 UI_SCROLL_ARROW_SIZE       =  17, //Odd centers arrow tips.
 //UI_SCROLL_BOX_MIN_HEIGHT   =   5, //UNSUSED
-UI_SCROLL_BOX_STD_HEIGHT   =  17; //Odd squares focus rect.
+UI_SCROLL_BOX_STD_HEIGHT   =  17, //Odd squares focus rect.
+
+/************* Textbox and List Defaults - JVK ******************/
+UI_TEXTBOX_HEIGHT          = 130,
+UI_TEXTBOX_WIDTH           = 130+UI_SCROLL_ARROW_SIZE,
+UI_LIST_HEIGHT             = 130,
+UI_LIST_WIDTH              = 130+UI_SCROLL_ARROW_SIZE,
+//UI_TAB_WIDTH               =  50, /* In pixels */
+UI_TEXTBOX_MIN_TEXT_WIDTH  =  50,
+UI_LIST_MIN_TEXT_WIDTH     =  50;
 
 enum
 {
@@ -196,22 +196,27 @@ class C_String
 public:
 
 	const char *str;
-	
+		
 	//NOTE: These are designed to not pick up on too many types
 	//so the constructors are not too easily rendered ambiguous.
-													 
-	C_String():str(NULL)
-	{}	
-	C_String(const char *str):str(str)
+
+	template<class> class sfinae{};
+	template<> class sfinae<char*>{ typedef char type; };
+	template<> class sfinae<const char*>{ typedef char type; };
+	template<> class sfinae<char[]>{ typedef char type; };
+	template<> class sfinae<const char[]>{ typedef char type; }; //VS2010
+	template<int N> class sfinae<char[N]>{ typedef char type; };
+	template<int N> class sfinae<const char[N]>{ typedef char type; }; //VS2010
+
+	C_String():str(nullptr)
 	{}
-	C_String(const C_String &cp):str(cp.str)
-	{}
-	template<class T, int N>
-	/* NOTE: const char(&nul)[1] is ambiguous. */
-	C_String(T (&str)[N]):str(N==1?NULL:(char*)str)
+	template<class T>
+	C_String(const T &ptr, typename sfinae<T>::type=0)
 	{
-		int compile[sizeof(T)==1]; (void)compile;
-	}	
+		str = sizeof(T)!=1?ptr:nullptr;
+	}
+	C_String(const C_String &cp):str(cp.str)
+	{}	
 	template<class A, class B, class C>
 	C_String(const std::basic_string<A,B,C> &str):str((char*)str.c_str())
 	{
@@ -223,19 +228,9 @@ public:
 		str = (char*)&a[0]; int compile[sizeof(b)==1]; (void)compile;
 	}
 
-	template<class T, int N>
-	/** I don't understand why this is required, but = weakly
-	  converts to a pointer more readily than the () syntax. */
-	C_String &operator=(T (&cp)[N])
-	{ 
-		//return *new(this) C_String(cp); //Doesn't work for MSVC2010.
-		str = N==1?NULL:(char*)cp; return *this;
-		int compile[sizeof(T)==1]; (void)compile;
-	}
-
 public:
 
-	inline bool empty()const { return !str||!*str; }
+	inline bool empty()const{ return !str||!*str; }
 };
 
 /************************************************************/
@@ -1601,12 +1596,12 @@ public:
 
 	template<class T> T *prev()
 	{
-		while(Control*p=prev()) if(!p->hidden)
+		for(Control*p=this;p=p->prev();) if(!p->hidden)
 		return dynamic_cast<T*>(p); return NULL;
 	}
 	template<class T> T *next()
 	{
-		while(Control*p=next()) if(!p->hidden)
+		for(Control*p=this;p=p->next();) if(!p->hidden)
 		return dynamic_cast<T*>(p); return NULL;
 	}
 
@@ -1644,7 +1639,7 @@ public:
 	
 		ALIGN_CENTER=CENTER, ALIGN_RIGHT=RIGHT, ALIGN_LEFT=LEFT, 
 
-		ALIGN_EXPAND=0, //NEW
+		ALIGN_EXPAND=0, //NEW (no alignment)
 		ALIGN_BUDDY=-1, //back-compat (Spinner->EditText)
 
 	/*************** set_click_type *********************/
@@ -1958,7 +1953,7 @@ protected:
 	Node *parent, C_String name __VA_ARGS__ int id=-1, UI::CB cb=UI::CB()	
 	#define GLUI_LIVE Live<LV> __(this,live_var); GLUI_INIT
 	#define GLUI_INIT _control_init(this,parent,name.str,id,cb);
-	#define GLUI_SBAR if(scroll) new ScrollBar(this,"",0,0); 
+	#define GLUI_SBAR if(scroll) new ScrollBar(this,"",0); 
 	static void _control_init(T *my, Node *parent, const char *name, int id, CB &cb)
 	{	
 		if(name) my->name = name; my->id = id; my->callback = cb;
@@ -2272,7 +2267,8 @@ public:
 	inline int get_box_width()
 	{
 		int bud = 0; //RIGHT_ALIGN
-		if(Control*ch=first_child()) if(!ch->hidden)
+		if(Control*ch=first_child()) 
+		if(!ch->hidden&&ch->alignment) //HACK: ALIGN_EXPAND?
 		bud = ch->w+ch->x_lr+ch->x_rl; //Hotzone?
 		return std::max(w-x_lr-x_rl-2*UI_BOXINNERMARGINX-bud,0);
 	}
@@ -2768,6 +2764,7 @@ public:
 	//spaces in English. Slashes are added to the remaining - hyphen.
 	LINKAGE int find_word_break(int start, int dir);
 
+	//CAUTION: Can return -1 (or less) if end is 0.
 	inline int substring_wrap(int start, int end)
 	{
 		int brk = find_word_break(--end,-1); return start>=brk?end:brk;

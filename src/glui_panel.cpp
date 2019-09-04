@@ -87,18 +87,19 @@ void Box_Interface::_draw()
 	else if(box_type) //BOX
 	{	 
 		top = y_off_top; bot = h-y_off_bot;
-				
-		Control *ch = first_child();		
-		int colors = enabled?box_type:-box_type;
-		int clear = enabled?BOX_CLEAR:-BOX_CLEAR;
-		//-1 is because x_rl should be 3 but is 2.
-		int x = x_lr, xx = w-x_rl-1, y = top, yy = bot;
-		draw_framed_rect(x,y,xx,yy,ch?clear:colors);
-
+						
+		//NAIVE IMPLMENTATION
 		//Subtract children from fill area?
 		int dx = 0, dxx = 0;
-		for(;ch;ch=ch->next())
+		Control *ch = first_child();
+		for(;ch;ch=ch->next()) if(!ch->hidden)
 		{			
+			if(!ch->alignment)
+			if(alignment!=ALIGN_BUDDY) //REMOVE ME
+			{
+				continue;//ALIGN_EXPAND?
+			}
+
 			int hzw = ch->w, hzh = ch->h; //hotzone
 			ch->offset_dims(&hzw,&hzh); 
 			if(alignment==ALIGN_BUDDY||ALIGN_LEFT!=ch->alignment)
@@ -106,7 +107,14 @@ void Box_Interface::_draw()
 				dxx-=hzw;
 			}
 			else dx+=hzw;
-		}						
+		}	
+
+		int colors = enabled?box_type:-box_type;
+		int clear = enabled?BOX_CLEAR:-BOX_CLEAR;
+		//-1 is because x_rl should be 3 but is 2.
+		int x = x_lr, xx = w-x_rl-1, y = top, yy = bot;
+		draw_framed_rect(x,y,xx,yy,dx||dxx?clear:colors);
+							
 		if(dx||dxx)
 		{
 			//The right margin omits a pixel
@@ -146,15 +154,15 @@ void Box_Interface::_update_size()
 	{
 	case ETCHED: case RAISED: //Panel
 	{
-		y_off_top = UI_YOFF;
+		y_off_top = UI_YOFF+2;
+		y_off_bot = UI_YOFF+2;
 		if(!name.empty()) switch(box_type) 
 		{
 		case ETCHED: y_off_top+=8; break;
 		case RAISED: y_off_top+=14; break;
 		}
-		y_off_top+=2;
 
-		y_off_bot = x_lr = x_rl = x_off+2; 
+		x_lr = x_rl = UI_XOFF+2; 
 				
 		if(glui_panel_main(this)) //ETCHED?
 		{

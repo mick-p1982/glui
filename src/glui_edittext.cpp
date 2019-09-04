@@ -1059,6 +1059,8 @@ bool Text_Interface::update_substring_bounds()
 
 int Text_Interface::find_word_break(int start, int direction)
 {
+	if(start<=0) return 0;
+
 	//I feel like (for English) these punctuation marks will have spaces.
 	//const char *breaks = " :-.," "\n\t";
 	const char breaks[] = " -/\\" "\n\t"; //TODO: handle \r and \r\n digraph.
@@ -1227,6 +1229,9 @@ int Text_Interface::_find_insertion_pt(int *found_x, int *found_y, int mode)
 	}
 
 	int box_width = get_box_width();
+	//Degenerate case can't end well.
+	assert(box_width>=UI_TEXTBOX_MIN_TEXT_WIDTH-UI_SCROLL_ARROW_SIZE);
+	if(box_width<8*char_width(' ')) return 0;
 		
 	//CAUTION: THIS MUST PRECISELY AGREE
 	//WITH _draw (TextBox)

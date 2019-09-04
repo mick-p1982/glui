@@ -1385,7 +1385,7 @@ UI::Control *UI::find_control(int x, int y)
 
 	for(Control*node=_main_panel;node;)
 	{
-		if(PT_IN_BOX(x,y,
+		if(!node->hidden&&PT_IN_BOX(x,y,
 		node->x_abs,node->x_abs+node->w,
 		node->y_abs,node->y_abs+node->h)&&!dynamic_cast<Column*>(node))
 		{

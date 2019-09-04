@@ -181,21 +181,29 @@ void UI::Control::_align_control()
 	{
 		//NOTE: _align_children elaborates on ALIGN_EXPAND.
 
-		if(w!=cw) 
+		if(w<cw) //w!=cw
 		{	
-			w = cw; x_abs = cx; update_size(); 
-
-			/***   Shift (proportionally) all child columns   ***/
-			for(;ch;ch=ch->next()) if(dynamic_cast<Column*>(ch)) 
+			if(is_container)
 			{
-				float p = float(ch->x_abs-x_abs)/w*cw;
+				//NOTE: Widgets 95 has a more complete version of this
+				//algorithm that takes into account margins for better
+				//accuracy.
+				float pp = 1.0/w*cw;
 
-				//min is worried about columns on the outer edge.
-				//There aren't good reasons to put tack a Column
-				//on as the last child.
-				//ch->x_abs = std::min(int(cx+p+0.5f),cw-ch->x_rl);
-				ch->x_abs = int(cx+p+0.5f);;
-			}		
+				/***   Shift (proportionally) all child columns   ***/
+				for(;ch;ch=ch->next()) if(dynamic_cast<Column*>(ch)) 
+				{
+					float p = (ch->x_abs-orig_x_abs)*pp;
+
+					//min is worried about columns on the outer edge.
+					//There aren't good reasons to put tack a Column
+					//on as the last child.
+					//ch->x_abs = std::min(int(cx+p+0.5f),cw-ch->x_rl);
+					ch->x_abs = int(cx+p+0.5f);
+				}		
+			}
+
+			w = cw; x_abs = cx; update_size(); 
 		}
 	}
 	else if(ch) if(a==ALIGN_BUDDY)
@@ -305,28 +313,22 @@ void UI::Control::get_column_dims(int *cx, int *cw)
 	Column *c; assert(cx&&cw);
 
 	/*** Look for preceding column ***/    
-	for(Control*ch=prev();ch;ch=ch->prev()) 
+	if(c=prev<Column>())
 	{
-		if(c=dynamic_cast<Column*>(ch)) if(!c->hidden) 
-		{
-			*cx = c->x_abs+c->x_rl;
-			*cw = c->w;			
-			return;
-		}
+		*cx = c->x_abs+c->x_rl;
+		*cw = c->w;			
+		return;
 	}
 
 	/*** Nope, Look for next column ***/
-	for(Control*ch=next();ch;ch=ch->next())
+	if(c=next<Column>())
 	{
-		if(c=dynamic_cast<Column*>(ch)) if(!c->hidden) 
-		{
-			if(Control*p=dynamic_cast<Control*>(parent()))
-			*cx = p->x_abs+p->x_lr;
-			else
-			*cx = 0; //collapsed_node (collapsible)		
-			*cw = c->x_abs-c->x_lr-*cx;
-			return;
-		}
+		if(Control*p=has_parent())
+		*cx = p->x_abs+p->x_lr;
+		else
+		*cx = 0; //collapsed_node (collapsible)		
+		*cw = c->x_abs-c->x_lr-*cx;
+		return;
 	}
 
 	 /*** This is single-column panel, so return panel dims ***/
@@ -346,10 +348,14 @@ void UI::Control::_pack(int x, int y)
 {
 	int x_in = x, y_in = y;
 	
+	Control *ch = first_child();
+
+	int a = alignment;
+	if(a==ALIGN_BUDDY) a = ch->alignment;
 	//NOTE: In theory containers shouldn't 
 	//have to update_size here, but it may
 	//also used to initialize their margin.
-	if(ALIGN_EXPAND==alignment&&!is_container)
+	if(a==ALIGN_EXPAND&&!is_container)
 	{	
 		//An expanded control is a one way ratchet.
 		//If not shrunken down it will distort the
@@ -364,7 +370,6 @@ void UI::Control::_pack(int x, int y)
 			   
 	x_abs = x_in; y_abs = y_in;
 	
-	Control *ch = first_child();
 	if(!ch&&collapsible) //2019
 	{
 		ch = (Control*)collapsible->first_child();
@@ -484,11 +489,16 @@ void UI::Control::_pack(int x, int y)
 
 		if(curr_y>max_y) max_y = curr_y;
 
+		int bot = ch->y_off_bot;
+
 		if(ch=ch->next()) 
 		{
+			//NOTE: If hidden/column curr_y is not 
+			//factored into max_y.
+
 			curr_y+=UI_ITEMSPACING;
 
-			if(ch->y_off_bot<=UI_YOFF+3) //NEW
+			if(bot<=UI_YOFF+3) //NEW
 			{
 				/* Pad some space below fixed-size panels */
 				if(!next<Separator>())
@@ -803,10 +813,14 @@ void UI::Control::enable(bool enable)
 		ui->deactivate_current_control();
 	}
 
-	if(scrollbar) 
+	//HACK: Keep text_interface scrollbars enabled. Note that
+	//uses of ui::bar that are not scrollbar-like make things
+	//difficult.
+	if(!enable&&scrollbar&&this==scrollbar->ti) 
 	{
 		scrollbar->enabled = true;
 
+		//Are horizontal scrollbars implemented?
 		assert(scrollbar2==scrollbar);
 	}
 

@@ -54,19 +54,9 @@ static void glui_textbox_scrollbar_callback(UI::ScrollBar *sb)
 
 UI::ScrollBar *UI::Control::scrollbar_init(CB cb)
 {
-	ScrollBar *sb = scrollbar;
-	
-	if(sb&&!sb->data_type)
-	{
-		sb->data_type = sb->SPIN_INT;
-		sb->alignment = sb->horizontal?LEFT:RIGHT;
-
-		(sb->horizontal?h:w)+=UI_SCROLL_ARROW_SIZE;
-
-		sb->set_object_callback(cb,this);
-	}
-
-	return sb;	
+	ScrollBar *sb = scrollbar;	
+	if(sb&&this!=sb->associated_object)
+	sb->set_object_callback(cb,this); return sb;	
 }
 
 /******************************** GLUI_TextBox::draw_insertion_pt() *********/
@@ -280,6 +270,7 @@ void UI::TextBox::_draw()
 void UI::TextBox::_update_size()
 {			
 	ScrollBar *sb = scrollbar_init(glui_textbox_scrollbar_callback);
+	int sb2 = sb&&!sb->hidden?UI_SCROLL_ARROW_SIZE:0;
 
 	if(tab_width<=0) //set_tab_width?
 	{
@@ -293,14 +284,18 @@ void UI::TextBox::_update_size()
 
 	Box_Interface::_update_size();
 
+	//TODO: Do in Box_Interface?
 	int mw = get_box_width();
 	if(mw<UI_TEXTBOX_MIN_TEXT_WIDTH)
 	{
-		offset_dims(&mw,NULL);		
-		if(sb&&!sb->hidden) 
-		mw+=UI_SCROLL_ARROW_SIZE;
+		mw = UI_TEXTBOX_MIN_TEXT_WIDTH;
+		offset_dims(&mw,NULL);	
+		mw+=sb2;
 		w = mw;
+		mw = get_box_width();
 	}
+	//Match List. 
+	if(mw%2) w++; //Odd squares focus rect.
 
 	//NEW: Moving out of draw routine.
 	if(int lh=font.height)

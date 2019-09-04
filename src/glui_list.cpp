@@ -242,15 +242,17 @@ bool UI::List::_special_handler(int key, int modifiers)
 void UI::List::_update_size()
 {
 	ScrollBar *sb = scrollbar_init(glui_list_scrollbar_callback);
+	int sb2 = sb&&!sb->hidden?UI_SCROLL_ARROW_SIZE:0;
 
 	Box_Interface::_update_size();
 
+	//TODO: Do in Box_Interface?
 	int mw = get_box_width();
 	if(mw<UI_LIST_MIN_TEXT_WIDTH)
 	{
-		offset_dims(&mw,NULL);		
-		if(sb&&!sb->hidden) 
-		mw+=UI_SCROLL_ARROW_SIZE;
+		mw = UI_LIST_MIN_TEXT_WIDTH;
+		offset_dims(&mw,NULL);
+		mw+=sb2;
 		w = mw;
 		mw = get_box_width();
 	}

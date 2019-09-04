@@ -69,9 +69,13 @@ void UI::ScrollBar::_members_init()
 	
 	switch(live_type) 
 	{
+	case UI_LIVE_INT: 
+	
+		data_type = SPIN_INT; break;
+
 	case UI_LIVE_FLOAT: case UI_LIVE_DOUBLE:
 		
-		data_type = SPIN_FLOAT;
+		data_type = SPIN_FLOAT; break;
 	}
 
 	// make sure limits are wide enough to hold live value
@@ -595,33 +599,18 @@ void UI::ScrollBar::_update_live()
 
 void UI::ScrollBar::_update_size()
 {
-	if(horizontal)
+	(horizontal?h:w) = UI_SCROLL_ARROW_SIZE;
+	
+	if(Control*c=associated_object)
+	if(parent()==associated_object)
 	{
-		h = UI_SCROLL_ARROW_SIZE;
+		alignment = horizontal?ALIGN_EXPAND:RIGHT;
 
-		if(Control*c=associated_object)
+		if(horizontal)
 		{
-			w = associated_object->w;
-			
-			if(c==parent()) //NEW
-			{
-				w-=c->x_lr+c->x_rl;
-			}
+			w = c->w-c->x_lr-c->x_rl;
 		}
-	}
-	else
-	{
-		w = UI_SCROLL_ARROW_SIZE;
-
-		if(Control*c=associated_object)
-		{
-			h = associated_object->h;
-
-			if(c==parent()) //NEW
-			{
-				h-=c->y_off_top+c->y_off_bot;
-			}
-		}
+		else h = c->h-c->y_off_top-c->y_off_bot;
 	}
 }
 
