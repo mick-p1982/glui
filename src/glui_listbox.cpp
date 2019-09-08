@@ -119,7 +119,7 @@ bool UI::ListBox::_special_handler(int key, int modifiers)
 
 	if(new_node&&new_node!=node)
 	{
-		set_int_val(node->id); 
+		set_int_val(new_node->id); 
 		
 		execute_callback();
 	}

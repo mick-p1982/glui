@@ -1325,6 +1325,8 @@ void UI::_passive_motion(int x, int y)
 		}
 	}
 
+	//NOTE: This is big potential for dangling pointer.
+	//_entry now tries to stop it.
 	_mouse_over_control = control;
 
 	if(!control||control->mouse_over(true,x,y))
@@ -1337,6 +1339,9 @@ void UI::_passive_motion(int x, int y)
 
 void UI::_entry(int state)
 {
+	//NEW: I worry ~Control should do this instead.
+	_mouse_over_control = nullptr; 
+
 	/*if(!_active_control||(_active_control
 	&&(_active_control->type==UI_CONTROL_EDITTEXT
 	 ||_active_control->type==UI_CONTROL_SPINNER)))*/
@@ -1613,27 +1618,32 @@ UI::Control *UI::_find_next_control(Control *control)
 {									
 	if(!control) control = _main_panel;
 
-	while(control)
+	for(Control*tmp_control;control;)
 	{
-		/** see if this control has a child **/
-		Control *tmp_control = (Control*)control->first_child();
-
-		if(tmp_control) 
+		if(!control->hidden) //NEW
 		{
-			if(tmp_control->can_activate&&tmp_control->enabled)
+			/** see if this control has a child **/
+			tmp_control = control->first_child();
+
+			if(tmp_control) 
 			{
-				return tmp_control;
+				if(!tmp_control->hidden //NEW
+				&&tmp_control->can_activate&&tmp_control->enabled)
+				{
+					return tmp_control;
+				}
+			
+				control = tmp_control;  /* Descend into child */
+
+				continue;
 			}
 
-			control = tmp_control;  /* Descend into child */
-
-			continue;
 		}
 
 		/*** At this point, control has no children ***/
 
 		/** see if this control has a next sibling **/
-		if(tmp_control=control->next())
+		if(tmp_control=control->next<Control>())
 		{
 			if(tmp_control->can_activate&&tmp_control->enabled)
 			{
@@ -1647,41 +1657,24 @@ UI::Control *UI::_find_next_control(Control *control)
 
 		/** back up until we find a sibling of an ancestor **/
 
-		bool back_up = true;
-		while(back_up&&dynamic_cast<Control*>(control->parent())) 
+		while(tmp_control=control->has_parent()) 
 		{
-			control = (Control*)control->parent();
-
-			if(control->next()) 
+			control = tmp_control;
+			if(tmp_control=control->next<Control>()) 
 			{
-				control = control->next();
+				control = tmp_control;
 				if(control->can_activate&&control->enabled)
 				{
 					return control;
 				}
-				
-				back_up = false;
-
-				/***	
-				if(control->is_container) 
-				{
-					tmp_control = control;
-					control = NULL;
-					break;
-				}
-				else back_up = false;
-				***/
+						
+				break;
 			}
 		}
 
 		/** Check if we've cycled back to the top... if so, return NULL **/
 		if(control==_main_panel) return NULL;
 	}
-	/*
-	if(tmp_control&&tmp_control->can_activate&&tmp_control->enabled)
-	{
-		return tmp_control;
-	}*/
 
 	return NULL;
 }
