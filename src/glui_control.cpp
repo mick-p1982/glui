@@ -310,10 +310,11 @@ void UI::Control::_align_children()
 
 void UI::Control::get_column_dims(int *cx, int *cw)
 {	
-	Column *c; assert(cx&&cw);
+	assert(cx&&cw);
 
 	/*** Look for preceding column ***/    
-	if(c=prev<Column>())
+	for(Control*ch=this;ch=ch->prev();)
+	if(Column*c=dynamic_cast<Column*>(ch))
 	{
 		*cx = c->x_abs+c->x_rl;
 		*cw = c->w;			
@@ -321,7 +322,8 @@ void UI::Control::get_column_dims(int *cx, int *cw)
 	}
 
 	/*** Nope, Look for next column ***/
-	if(c=next<Column>())
+	for(Control*ch=this;ch=ch->next();)
+	if(Column*c=dynamic_cast<Column*>(ch))
 	{
 		if(Control*p=has_parent())
 		*cx = p->x_abs+p->x_lr;

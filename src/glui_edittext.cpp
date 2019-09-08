@@ -186,33 +186,28 @@ void Text_Interface::draw_substring(int y)
 
 void UI::EditText::_update_size()
 {	
+	//This could use more thought.
 	Box_Interface::_update_size();
 
-	//int dw = w; //Not working out.
-
-	int delta,text_size = string_width(name)+UI_XOFF;
-
+	int text_size = string_width(name);
+	
 	if(text_size)
 	{
-		if(x_lr<text_size)
-		{
-			delta = text_size-x_lr;
-		}
-		else delta = 0;
+		text_size+=UI_XOFF;
 
-		x_lr+=delta; /* w+=delta; */
+		x_lr = std::max(x_lr,text_size);
 	}
+	else x_lr = 0;
 
-	text_size = UI_EDITTEXT_MIN_TEXT_WIDTH;
+	int min_size = UI_EDITTEXT_MIN_TEXT_WIDTH;
 	if(data_type==EDIT_INT)
-	text_size = UI_EDITTEXT_MIN_INT_WIDTH;	
-	w = std::max(w,x_lr+text_size);
+	min_size = UI_EDITTEXT_MIN_INT_WIDTH;	
+	w = std::max(w,x_lr+min_size);
 
 	/*SPINNER_UP_ON poses a problem for this.
 	//NOTE: get_page_length needs to be nonzero.
 	h = std::max(h,font.height+y_off_top+y_off_bot);*/
 
-	//if(dw!=w)
 	update_substring_bounds();
 }
 

@@ -175,7 +175,7 @@ void Box_Interface::_update_size()
 
 		y_off_top = 0; if(!name.empty()) 
 		{
-			if(x_lr<x_off+2) 
+			if(x_lr<UI_XOFF+2) //???
 			y_off_top = UI_DEFAULT_HEIGHT+UI_ITEMSPACING;
 		}
 		else x_lr = 2; //NEW: Eliminate name tag.
