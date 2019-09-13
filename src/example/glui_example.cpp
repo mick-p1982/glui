@@ -104,9 +104,10 @@ namespace //some common variables (that don't record state)
 
 	}main_window;
 
-	static void quit_cb(int)
+	static void quit_cb(GLUI_Control *c)
 	{
-		glui_example_switch(0,main_window);
+		//glui_example_switch(0,main_window); //F6?
+		glui_example_switch(0,c->ui->get_glut_window_id());
 	}
 
 	/************************************************** draw_axes() **********/

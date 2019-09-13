@@ -102,6 +102,7 @@ bool UI::ListBox::_mouse_over(bool state, int local_x, int local_y)
 bool UI::ListBox::_special_handler(int key, int modifiers)
 {	
 	Item *node = get_item_ptr(int_val);
+	if(!node) return true; //???
 	Item *new_node = NULL;
 
 	switch(key)

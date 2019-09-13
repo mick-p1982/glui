@@ -3407,8 +3407,10 @@ public:	//Note: This doesn't have to use Interface.
 
 	public:
 		
-		Item(int id=-1, C_String text=""):id(id),text(text.str)
-		{}
+		Item(int id=-1, C_String str=""):id(id)
+		{
+			if(str.str) text = str.str;
+		}
 
 		inline Item *prev(){ return (Item*)_prev_sibling; }
 		inline Item *next(){ return (Item*)_next_sibling; }

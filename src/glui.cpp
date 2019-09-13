@@ -1798,6 +1798,8 @@ void GLUI::reshape()
 	for(UI*ui=first_ui();ui;ui=ui->next())	
 	if(current_window==ui->_glut_parent_id) 
 	{
+		if(ui->_flags&ui->_HIDDEN) continue; //NEW
+
 		//Only GLUI::reshape should call this now.
 		//glutSetWindow(ui->get_glut_window_id());
 		ui->_subwindow_position(parent_w,parent_h);
@@ -1807,6 +1809,13 @@ void GLUI::reshape()
 }
 void UI::_subwindow_position(int parent_w, int parent_h)
 {
+	if(_pending_repacking) //NEW
+	{
+		_pack_controls(); 
+		glutSetWindow(_glut_window_id);
+		glutReshapeWindow(_w,_h);
+	}
+
 	int new_x, new_y;
 	if(_flags&SUBWINDOW_RIGHT)
 	{
@@ -1832,13 +1841,23 @@ void UI::_subwindow_position(int parent_w, int parent_h)
 	for(UI*ui=GLUI::first_ui();ui;ui=ui->next())		
 	if(_glut_parent_id==ui->_glut_parent_id)
 	{
+		if(ui->_flags&ui->_HIDDEN) continue; //NEW
+		
+		if(ui->_pending_repacking) //NEW
+		{
+			ui->_pack_controls();
+			glutSetWindow(ui->_glut_window_id);
+			glutReshapeWindow(ui->_w,ui->_h);
+		}
+
+		//QUESTIONABLE LEGACY LOGIC
 		if(ui->_flags&SUBWINDOW_TOP
 		&&_flags&(SUBWINDOW_LEFT|SUBWINDOW_RIGHT)) 
 		{
 			/** If we are a RIGHT or LEFT subwindow, and there exists some
 			TOP subwindow, bump our position down  **/
 
-			new_y += ui->_h;
+			new_y += ui->_h; //???
 		}
 
 		/** Check multiple subwins at same position  **/
