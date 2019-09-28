@@ -259,7 +259,7 @@ void Window::draw_filled_rect(int x1, int y1, int x2, int y2, int box_colors)
 }
 void Window::draw_framed_rect(int x1, int y1, int x2, int y2, int box_colors)
 {	
-	if(ABS(box_colors)!=BOX_CLEAR)
+	if(std::abs(box_colors)!=BOX_CLEAR)
 	{	
 		draw_filled_rect(x1,y1,x2,y2,box_colors);
 	}

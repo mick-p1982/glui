@@ -82,11 +82,13 @@ void Node::_sort(bool(*pred)(Node*,Node*), int depth)
 
 		_child_head = buf[0];
 		_child_tail = buf[--i];
+		buf[i]->_next_sibling = nullptr;
 		for(;i-->0;)
 		{
 			buf[i]->_next_sibling = buf[i+1];
 			buf[i+1]->_prev_sibling = buf[i];
 		}
+		buf[0]->_prev_sibling = nullptr;
 	}
 
 	if(buf!=stackbuf) free(buf);

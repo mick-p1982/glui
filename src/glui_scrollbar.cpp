@@ -135,7 +135,7 @@ inline int UI::ScrollBar::_track_len()
 
 bool UI::ScrollBar::_mouse_up_handler(int local_x, int local_y, bool inside)
 {	
-	if(associated_object) //2019
+	if(associated_object&&!GLUI.wheel_event) //2019
 	{
 		associated_object->activate(ACTIVATE_MOUSE);
 	}
@@ -235,7 +235,7 @@ void UI::ScrollBar::_draw()
 	int sas = UI_SCROLL_ARROW_SIZE;		
 	int run = (horizontal?w:h);
 	int opp = (horizontal?h:w);
-	int bar = run-2*sas+1;
+	int bar = run-2*sas;
 
 	//Darkening somewhat to make it distinguisable from
 	//the white on the buttons. Maybe if the track were
@@ -244,14 +244,13 @@ void UI::ScrollBar::_draw()
 
 	if(horizontal)
 	{
-		//NOTE: These have shadows.
-		draw_scroll_arrow(LEFT,0,0); //#1
-		draw_scroll_box(sas+bsp,0,box,opp); //#2
-		draw_scroll_arrow(RIGHT,run-sas,0); //#3
+		draw_scroll_arrow(LEFT,0,0);
+		draw_scroll_box(sas+bsp,0,box,opp);
+		draw_scroll_arrow(RIGHT,run-sas,0);
 		glColor3ub(white,white,white);
 		draw_scroll(sas,0,bsp,opp,STATE_UP&state?0:shadow);
 		glColor3ub(white,white,white);
-		draw_scroll(sas+bep,0,bar-bep-1,opp,shadow);
+		draw_scroll(sas+bep,0,bar-bep,opp,bsp<bep?shadow:0);
 	}
 	else
 	{
@@ -261,7 +260,7 @@ void UI::ScrollBar::_draw()
 		glColor3ub(white,white,white);
 		draw_scroll(0,sas,opp,bsp,STATE_UP&state?0:shadow);
 		glColor3ub(white,white,white);
-		draw_scroll(0,sas+bep,opp,bar-bep-1,shadow);
+		draw_scroll(0,sas+bep,opp,bar-bep,bsp<bep?shadow:0);
 	}
 }
 
@@ -347,13 +346,15 @@ void UI::ScrollBar::draw_scroll_arrow(int arrowtype, int x, int y)
 
 	if(!enabled) // once more!
 	{ 
-		glTranslated(x+offset,y,0);
+		offset-=1;
+
+		glTranslated(x+offset,y+offset,0);
 		glColor3ubv(gray);
 		glBegin(GL_TRIANGLES);
 		glVertex2fv(tri);
 		glVertex2fv(tri+2); glVertex2fv(tri+4);
 		glEnd();
-		glTranslated(-x,-y,0);
+		glTranslated(-x-offset,-y-offset,0);
 	}
 }
 

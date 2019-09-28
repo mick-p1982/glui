@@ -755,6 +755,8 @@ public:
 	_HIDDEN           = 64, //2019
 	};
 
+	bool hidden(){ return _flags&_HIDDEN; }
+
 	inline UI(C_String name, int x=-1, int y=-1, int flags=0, Panel *mp=NULL)
 	{
 		_main_panel = mp; _init(name.str,flags,x,y,-1);
@@ -1527,7 +1529,12 @@ private: //Interface methods
 	}
 
 	inline bool _key_handler(int key, int modifiers)
-	{
+	{	
+		//REMINDER
+		//WASD is a problem for File->Save shortcuts.
+		//It could be done after shortcuts, but it'd 
+		//be odd if some work and others do not work.	
+		/*
 		//Note: If arrow keys are made to navigate groups then
 		//GLUI's 3D widgets should use WASD so to be navigable.
 		switch(key) 
@@ -1538,7 +1545,8 @@ private: //Interface methods
 		case 'd': case 'D': key = 102; break; //GLUT_KEY_RIGHT
 		default: return true;
 		}
-		return special_handler(key,modifiers);
+		return special_handler(key,modifiers);*/
+		return true; //return false; //2019
 	}
 	inline bool _special_handler(int key, int modifiers)
 	{
@@ -2399,8 +2407,8 @@ public:
 		w                = UI_DEFAULT_WIDTH;
 		y_off_top        = UI_BUTTON_HEIGHT+UI_YOFF+1;
 		y_off_bot        = UI_YOFF-3;
-		x_lr             = x_off;
-		x_rl             = x_off;
+		x_lr             = UI_XOFF;
+		x_rl             = UI_XOFF;
 		collapsible      = &collapsed_node;
 		can_activate     = true; 
 		alignment        = ALIGN_EXPAND; 
@@ -4575,7 +4583,11 @@ public: //Old GLUI_Master methods
 			e.menu_control = NULL;
 			mc->mouse_over(false,-1,-1);
 		}
-		if(c) e.curr_cancel_down = true; 
+		if(c)
+		{
+			e.curr_cancel_down = true; 
+			e.curr_button_down = false;
+		}
 
 		/* set_left_button_glut_menu_control */
 

@@ -50,6 +50,7 @@ void UI::Control::set_parent(Node *p)
 	{
 		if(UI*ui=dynamic_cast<UI*>(p))
 		{
+			/*What if a UI needs a scrollbar/slider?
 			//EXPERIMENTAL: Attach scrollbar to UI window??
 			if(ScrollBar*sb=dynamic_cast<ScrollBar*>(this))
 			{
@@ -57,7 +58,7 @@ void UI::Control::set_parent(Node *p)
 				sb->_link(sb->ui=ui,!sb->horizontal);
 				sb->set_object_callback(glui_control_scroll_ui_callback);
 				return;
-			}
+			}*/
 
 			p = ui->_main_panel;
 		}
@@ -71,9 +72,6 @@ void UI::Control::set_parent(Node *p)
 
 	//ui = parent.ui;
 	set(&Control::ui,parent.ui);
-
-	//EXPERIMENTAL
-	if(!px) px = (PX*)"space"; //default GLUI layout
 
 	/*** Collapsible nodes have to be handled differently, b/c the first and
 	last children are swapped in and out  ***/
@@ -212,7 +210,7 @@ void UI::Control::_align_control()
 	}
 	/***   Shift all child columns   ***/
 	for(;ch;ch=ch->next()) if(dynamic_cast<Column*>(ch)) 
-	{
+	{	
 		ch->x_abs+=x_abs-orig_x_abs;
 	}
 }
@@ -267,7 +265,7 @@ void UI::Control::_align_children()
 
 			fc: ch = fc;
 			
-			int cmp = ch->x_abs; 
+			int cmp = ch?ch->x_abs:0; 
 			int max_w = 0;
 			for(;ch;ch=ch->next())
 			{
@@ -404,8 +402,8 @@ void UI::Control::_pack(int x, int y)
 		//if(Panel*p=dynamic_cast<Panel*>(ch))
 		if(Box_Interface*p=dynamic_cast<Box_Interface*>(ch))
 		{				
-			int prev_panel = panel_padding;
-
+			int prev_panel = 
+			panel_padding; panel_padding = 0;
 			if(p->box_type||!p->name.empty())
 			{
 				if(p->h>UI_EDITTEXT_HEIGHT+2

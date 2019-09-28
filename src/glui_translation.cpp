@@ -60,7 +60,7 @@ void UI::Translation::_iaction_mouse(int stage, int x, int y)
 
 			if(GLUI.curr_modifiers&GLUT_ACTIVE_ALT)
 			{
-				if(ABS(y)>ABS(x))
+				if(std::abs(y)>std::abs(x))
 				{
 					glui_translation_locked = 'X';
 			//		glutSetCursor(GLUT_CURSOR_UP_DOWN);

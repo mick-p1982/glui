@@ -868,7 +868,9 @@ void UI::get_dims(int *w, int *h)
 void UI::_display()
 {
 	if(_pending_idleclose) return; //freeglut
-	
+			
+	if(hidden()) glutHideWindow(); //wxWidgets
+
 	//HACK: _init sets _main_panel to be its active control in order
 	//defer activation until the controls are added.
 	if(_main_panel==GLUI.active_control) activate();
@@ -1117,13 +1119,11 @@ bool UI::_keyboard(int key)
 		}
 
 		if(callthrough&&keyboard_callback)
-		{
-			keyboard_callback(this,key,cm);
-			return true;
-		}
+		return keyboard_callback(this,key,cm);
+		return callthrough;
 	}
 
-	return false;
+	return true;
 }
 void UI::_keyboard_up(int key)
 {
@@ -1157,12 +1157,9 @@ bool UI::_special(int key)
 	if(_active_control) callthrough = 
 	_active_control->special_handler(key,GLUI.curr_modifiers);
 
-	if(callthrough&&special_callback)
-	{
-		special_callback(this,key,GLUI.curr_modifiers);
-		return true;
-	}
-	return false;
+	if(callthrough&&special_callback)	
+	return special_callback(this,key,GLUI.curr_modifiers);
+	return callthrough;
 }
 void UI::_special_up(int key)
 {
@@ -1515,39 +1512,42 @@ int UI::_set_current_draw_buffer()
 /************************************* GLUI_Main::activate_control() *********/
 
 extern Caret_CB glui_textbox_caret_cb();
-bool UI::activate_control(Control *control, int how)
+bool UI::activate_control(Control *c, int how)
 {
+	static bool caret = false; //HACK: Protecting caret.
+
 	if(!how) //deactivate_current_control
 	{
-		if(!control) control = _active_control;
-		if(!control) return false;
+		if(!c) c = _active_control;
+		if(!c) return false;
 
-		if(this!=control->ui){ assert(0); return false; }
+		if(this!=c->ui){ assert(0); return false; }
 
 		//NOTE: deactivate calls activate_control if it is activated.
 		_active_control = NULL; 
-		if(!control->deactivate()) //I suppose this is permissible?
+		if(!c->deactivate()) //I suppose this is permissible?
 		{
-			_active_control = control; return false; 
+			_active_control = c; return false; 
 		}
 
-		/** If this isn't a container control, then redraw it in its
+		/** If this isn't a container c, then redraw it in its
 		deactivated state.  Container controls, such as panels, look
 		the same activated or not **/
 
 		/***
-		if(!control->is_container
-		||control->type==UI_CONTROL_ROLLOUT) 
+		if(!c->is_container
+		||c->type==UI_CONTROL_ROLLOUT) 
 		{***/
-			control->redraw();
+			c->redraw();
 		/***
 		}**/
 				
+		if(!caret)
 		if(this==GLUI.active_control_ui)
 		{
 			//NEW: Manage caret to simplify text objects.
 			GLUI.prev_caret_pt = GLUI.curr_caret_pt = -1;			
-			glui_textbox_caret_cb()(control,0,0,0,!control->enabled);	
+			glui_textbox_caret_cb()(c,0,0,0,!c->enabled);	
 
 			/*  printf("deactivate: %d\n",glutGetWindow()); */
 			GLUI.active_control = NULL;
@@ -1559,50 +1559,72 @@ bool UI::activate_control(Control *control, int how)
 		return true;	
 	}
 	 
-	if(control) /*******  Now activate it   *****/
+	if(c) /*******  Now activate it   *****/
 	{
-		if(!control->can_activate||control->hidden) //NEW
+		if(!c->can_activate||c->hidden) //NEW
 		{
 			return false; //NEW
 		}
-		if(!control->enabled) //NEW: OTHER implies enablement.
+		if(!c->enabled) //NEW: OTHER implies enablement.
 		{	
 			if(how!=ACTIVATE_OTHER)
 			{
 				//Text should be highlightable/copyable. 
 				//TODO: Titles/StaticText should be too.
-				if(!dynamic_cast<Text_Interface*>(control))
+				if(!dynamic_cast<Text_Interface*>(c))
 				{
 					return false;
 				}
 			}
-			else control->enable();
+			else c->enable();
 		}
-		if(this!=control->ui){ assert(0); return false; }
+		if(this!=c->ui){ assert(0); return false; }
+
+		bool ret;
 
 		//2019: TextBox prevents ACTIVATE_TAB activation.
 		//NOTE: deactivate calls activate_control if it is deactivated.
-		Control *swap = _active_control; _active_control = control;
-		bool ret = control->activate(how); _active_control = swap; 
-		if(!ret) return false;
-			 		
-		goto deactivate;
+		//2 & 3 are for set_caret.
+		void *swap1(c),*swap2(this),*swap3(c); 
+		int swap4 = -1;
+		std::swap((void*&)_active_control,swap1);
+		std::swap((void*&)GLUI.active_control_ui,swap2);
+		std::swap((void*&)GLUI.active_control,swap3);
+		std::swap(GLUI.curr_caret_pt,swap4);
+		{
+			ret = c->activate(how); 
+		}
+		std::swap((void*&)_active_control,swap1);
+		std::swap((void*&)GLUI.active_control_ui,swap2);
+		std::swap((void*&)GLUI.active_control,swap3);
+
+		//HACK: Protect caret?
+		bool caret2 = -1!=GLUI.curr_caret_pt;
+		if(!ret||!caret2)
+		GLUI.curr_caret_pt = swap4;		
+
+		if(!ret) return false;			 		
+
+		caret = caret2;
+
+		goto deactivate;		
 	}	
 	else 
 	{
-		control = _find_next_control(NULL); 
+		c = _find_next_control(NULL); 
 		
 		deactivate:
 		
-		/** Are we not activating a control in the same window as the
-		previous active control? */
+		/** Are we not activating a c in the same window as the
+		previous active c? */
 		if(GLUI.active_control_ui/*&&this!=GLUI.active_control_ui*/)
 		{
-			if(control!=GLUI.active_control)
+			if(c!=GLUI.active_control)
 			GLUI.active_control_ui->deactivate_current_control();
 		}
+		caret = false; //HACK
 
-		if(_active_control=control) control->redraw();
+		if(_active_control=c) c->redraw();
 	}
 
 	/* printf("activate: %d\n",glutGetWindow()); */
@@ -2043,7 +2065,18 @@ void UI::show(bool sw)
 	{	
 		if(sw) _flags&=~_HIDDEN;		
 		if(!sw) _flags|=_HIDDEN;
-		(sw?glutShowWindow:glutHideWindow)();
+		
+		//HACK: Mouse is reviving the window.
+		if(!sw) deactivate_current_control();
+
+		//MAY HELP?
+		//HACK: There is a conflict with hiding a window that was
+		//previously set to be displayed. I can't find any way to
+		//revoke the display with wxWidgets.
+		//(sw?glutShowWindow:glutHideWindow)();		
+		if(sw) glutShowWindow();
+		else if(!_pending_redisplay)
+		glutPostRedisplay();
 	}
 	if(orig>0) glutSetWindow(orig);
 }
@@ -2128,7 +2161,7 @@ static bool glui_wheel(UI::Control *c, UI::Control *c2, int i, int modifiers)
 		GLUI.wheel_event = true;
 		{
 			if(!wh->special_handler(k,modifiers)) 
-			for(i=ABS(i)-1;i-->0;) 
+			for(i=std::abs(i)-1;i-->0;) 
 			{
 				wh->special_handler(k,modifiers);
 			}

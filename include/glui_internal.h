@@ -35,11 +35,12 @@
 /**** Return the ASCII control code given the non-control ASCII character */
 #define CTRL(c) ((c>=('a'-1))?(c-'a'+1):(c-'A'+1))
 
+/*Or abs was part of <cstdlib> but C++11 adds <cmath>.
 //LITTLE USED (2019)
 //Can use std::abs for float, but not int (until C++11)
 #ifndef ABS
 #define ABS(a) ((a)>=0?(a):(-(a)))
-#endif
+#endif*/
 
 /***************** clamp a value to some fixed interval *************/
 #ifndef CLAMP

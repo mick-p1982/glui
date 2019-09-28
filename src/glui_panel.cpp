@@ -52,7 +52,7 @@ void Box_Interface::_draw()
 
 	int top,bot,left = 0; if(box_type==RAISED)
 	{
-		top = 0; left = x_off; drop+=UI_YOFF;
+		top = 0; left = UI_XOFF; drop+=UI_YOFF;
 
 		glColor3f(1,1,1);
 		draw_border_rect(0,0,w,h-1,1|8);
@@ -126,7 +126,7 @@ void Box_Interface::_draw()
 
 	if(!name.empty())
 	{
-		if(x_lr>x_off+2)
+		if(x_lr>UI_XOFF+2)
 		{
 			left = x_lr-str_width-UI_XOFF-1;
 			if(left<0)

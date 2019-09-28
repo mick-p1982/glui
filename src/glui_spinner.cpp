@@ -182,7 +182,7 @@ bool UI::Spinner::_mouse_down_handler(int local_x, int local_y)
 
 bool UI::Spinner::_mouse_up_handler(int local_x, int local_y, bool inside)
 {
-	if(edittext) //2019
+	if(edittext&&!GLUI.wheel_event) //2019
 	{
 		edittext->activate(ACTIVATE_MOUSE); 
 	}
@@ -430,12 +430,9 @@ void UI::Spinner::do_click()
 		double new_val = float_val+inc;
 
 		if(data_type==SPIN_INT) 
+		if(int_val==(int)new_val) //NEW
 		{
-			while(int_val==(int)new_val) //NEW
-			{
-				new_val+=inc;
-			}
-			new_val = (int)new_val; //NEW
+			if(inc) new_val = int_val+(inc>0?1:-1);
 		}
 		
 		/** Remember, edittext mirrors the float and int values ***/

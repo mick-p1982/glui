@@ -279,7 +279,10 @@ void Text_Interface::set_limits(double l1, double l2, int limit_type)
 	{
 		double new_val = float_val; CLAMP(new_val,l1,l2);
 
-		if(new_val!=float_val) set_float_val(new_val);
+		if(new_val!=float_val) //set_val?
+		if(data_type==EDIT_INT)
+		set_int_val((int)new_val);
+		else set_float_val((int)new_val);
 	}
 }
 
@@ -404,7 +407,7 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 	#else
 	int rl_key = +key;
 	#endif
-	int abs_key = ABS(key);
+	int abs_key = std::abs(key);
 	if(abs_key<=127) key = abs_key;
 
 	if(iscntrl(abs_key)) switch(rl_key)
@@ -681,7 +684,7 @@ bool UI::EditText::_key_handler(int key, int modifiers)
 			int dp =(int)text.find_first_of('.');
 			if(dp!=text.npos)
 			if(dp<sel_min()||dp>=sel_max())
-			return true;
+			return false;
 			goto decimal_point;
 		}
 		goto floating_point;	 
@@ -690,7 +693,7 @@ bool UI::EditText::_key_handler(int key, int modifiers)
 	{
 		floating_point:
 		{
-			int ak = ABS(key);
+			int ak = std::abs(key);
 			if((key<'0'||key>'9')&&key!='-'/*&&key!='.'*/)
 			{
 				if(!iscntrl(ak)) return true;
@@ -700,12 +703,17 @@ bool UI::EditText::_key_handler(int key, int modifiers)
 
 		if(key=='-'||key==-'-')  /* User typed a '-' */
 		{
+			if(has_limits&&limits1>=0) //NEW
+			{
+				return false;
+			}
+
 			/* If user has first character selected, then '-' is allowed */
 			if(sel_min()||text[0]=='-'&&!sel_max()) 
 			{
 				/* Can only place negative at beginning of text,
 				and only one of them */
-				return true; 
+				return false; 
 			}
 		}
 	}    
@@ -891,6 +899,11 @@ bool Text_Interface::_activate(int how)
 
 		sel_start = 0;
 		sel_end = get_char_count();
+		if(!sel_end) //NEW
+		{
+			GLUI::reset_caret(this);
+			GLUI.caret_x = GLUI.caret_y = 0;
+		}
 	}
 	else //deactivate()
 	{	
@@ -911,10 +924,14 @@ bool Text_Interface::_activate(int how)
 			//This resets the scrollbar position as if the text was reset
 			//by the user.
 			//set_text(text);
-			_evaluate_limits();
-			stage_live(&text); output_live(); //This doesn't.
-			//set_text would update this too.
-			if(spinner) spinner->set_val(float_val);
+			if(has_limits&&data_type<=UI_EDIT_TEXT) //NEW
+			{
+				//_evaluate_limits();
+				stage_live(&text); output_live(); //This doesn't.
+				//set_text would update this too.
+				if(spinner) spinner->set_val(float_val);
+			}
+			else set_text(text); //OLD
 		
 			/***** Now do callbacks if value changed ******/
 			//if(prev_text!=text)

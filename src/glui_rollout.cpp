@@ -75,6 +75,8 @@ bool UI::Rollout::_mouse_up_handler(int local_x, int local_y, bool inside)
 	if(GLUI.init_inside&&inside)
 	{
 		_set_is_open(!is_open);
+
+		set_int_val(is_open); execute_callback();
 	}
 	else redraw(); return false;
 }
@@ -157,7 +159,7 @@ void UI::Rollout::_draw()
 void UI::Rollout::_update_size()
 {
 	//May adjust or make room for a scrollbar.
-	x_lr = x_rl = x_off+2;
+	x_lr = x_rl = UI_XOFF+2;
 	  
 	int text_size = string_width(name);
 
