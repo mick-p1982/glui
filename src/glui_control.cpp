@@ -64,7 +64,32 @@ void UI::Control::set_parent(Node *p)
 		}
 	}
 	
-	if(_parent_node) _unlink();
+	if(_parent_node) //_unlink();
+	{
+		//REMINDER: This is mainly for Control::~Control but 
+		//it can't hurt to do it whenever there is no parent.
+		if(!p) 
+		{
+			//Trying to eliminate internal dangling references.
+			if(ui&&ui==GLUI.active_control_ui)
+			{
+				if(_child_head) //Recursive deactivate?
+				{
+					bool nice = enabled;
+
+					disable(); //Should deactivate children.
+
+					if(nice) enable(); 
+				}
+				else if(this==ui->_active_control)
+				{
+					ui->deactivate_current_control();
+				}
+			}
+		}
+
+		_unlink();
+	}
 
 	if(!p){ ui = NULL; return; }
 
@@ -344,7 +369,7 @@ void UI::Control::get_column_dims(int *cx, int *cw)
 
 /*** GLUI_Control::pack() **********/
 
-void UI::Control::_pack(int x, int y)
+bool UI::Control::_pack(int x, int y)
 {
 	int x_in = x, y_in = y;
 	
@@ -395,6 +420,8 @@ void UI::Control::_pack(int x, int y)
 
 	int panel_padding = 0; 
 
+	bool bottom_pad = false;
+
 	int max_y = curr_y; 
 
 	int max_w = 0; while(ch) if(!ch->hidden)
@@ -404,7 +431,7 @@ void UI::Control::_pack(int x, int y)
 		{				
 			int prev_panel = 
 			panel_padding; panel_padding = 0;
-			if(p->box_type||!p->name.empty())
+			if(p->box_type)
 			{
 				if(p->h>UI_EDITTEXT_HEIGHT+2
 				&&Panel::ROLLOUT!=p->box_type)
@@ -418,63 +445,70 @@ void UI::Control::_pack(int x, int y)
 			&&ch->y_off_top<=UI_ITEMSPACING)
 			{
 				/* Pad some space above fixed-size panels */
-				if(!prev<Separator>())
+				if(!ch->prev<Separator>())
 				curr_y+=panel_padding;
 			}
 		}
-		else panel_padding = 0;
-
-		if(Column*c=dynamic_cast<Column*>(ch)) 
+		else 
 		{
-			//NOTE: curr_column sets w/h below...
-			curr_column = c;
-			int cw = c->get_type()?2:0;
-			c->w = cw; 
-			c->h = curr_y - y_top_column;
-			c->y_abs = y_top_column;
-			curr_y = y_top_column;
-
-			/*2019: This is pretty uneven...
-			curr_x+=max_w+x_margin;
-			column_x = curr_x;
-			c->x_abs = curr_x;
-			curr_x+=x_margin;
-			*/
-			curr_x+=max_w; if(cw)
-			{	
-				c->x_abs = curr_x+x_margin+1;
-				c->x_lr = c->x_rl = 1+x_margin; 
-
-				curr_x+=2+x_margin;
-			}
-			else //Invisible column?
+			Column *c = dynamic_cast<Column*>(ch);
+			if(c&&panel_padding) 
+			bottom_pad = true;
+			panel_padding = 0; if(c)
 			{
-				int hm = x_margin/2; //half-margin
+				//NOTE: curr_column sets w/h below...
+				curr_column = c;
+				int cw = c->get_type()?2:0;
+				c->w = cw; 
+				c->h = curr_y - y_top_column;
+				c->y_abs = y_top_column;
+				curr_y = y_top_column;
 
-				c->x_lr = hm; c->x_rl = x_margin-hm;
+				/*2019: This is pretty uneven...
+				curr_x+=max_w+x_margin;
+				column_x = curr_x;
+				c->x_abs = curr_x;
+				curr_x+=x_margin;
+				*/
+				curr_x+=max_w; if(cw)
+				{	
+					c->x_abs = curr_x+x_margin+1;
+					c->x_lr = c->x_rl = 1+x_margin; 
 
-				if(!max_w) //Prior column is hidden?
-				{					
-					//UNTESTED: Should appear as if 
-					//this column uses the previous
-					//margin.
-					c->x_abs = curr_x-c->x_rl;
-
-					goto dbl_col;
+					curr_x+=2+x_margin;
 				}
-				else c->x_abs = curr_x+hm;
-			}
+				else //Invisible column?
+				{
+					int hm = x_margin/2; //half-margin
+
+					c->x_lr = hm; c->x_rl = x_margin-hm;
+
+					if(!max_w) //Prior column is hidden?
+					{					
+						//UNTESTED: Should appear as if 
+						//this column uses the previous
+						//margin.
+						c->x_abs = curr_x-c->x_rl;
+
+						goto dbl_col;
+					}
+					else c->x_abs = curr_x+hm;
+				}
 			
-			max_w = 0;
+				max_w = 0;
 
-			curr_x+=x_margin;
+				curr_x+=x_margin;
 
-			column_x = curr_x;
+				column_x = curr_x;
 
-		dbl_col: ch = ch->next(); continue;
+			dbl_col: ch = ch->next(); continue;
+			}
 		}
 
-		ch->_pack(curr_x,curr_y);
+		if(ch->_pack(curr_x,curr_y))
+		{
+			panel_padding = UI_ITEMSPACING; 
+		}
 							  
 		curr_y+=ch->h;		
 		
@@ -489,27 +523,31 @@ void UI::Control::_pack(int x, int y)
 
 		if(curr_y>max_y) max_y = curr_y;
 
-		int bot = ch->y_off_bot;
+		//NOTE: If hidden/column curr_y is not 
+		//factored into max_y.
 
-		if(ch=ch->next()) 
+		curr_y+=UI_ITEMSPACING;
+
+		if(panel_padding)
+		if(ch->y_off_bot<=UI_YOFF+3) //NEW
 		{
-			//NOTE: If hidden/column curr_y is not 
-			//factored into max_y.
-
-			curr_y+=UI_ITEMSPACING;
-
-			if(bot<=UI_YOFF+3) //NEW
-			{
-				/* Pad some space below fixed-size panels */
-				if(!next<Separator>())
-				curr_y+=panel_padding;
-			}
+			/* Pad some space below fixed-size panels */
+			if(!ch->next<Separator>())
+			curr_y+=panel_padding;
 		}
+
+		ch = ch->next();
 	}
 	else ch = ch->next();
 
-	if(is_container) 
-	{							  
+	bool ret = false; if(is_container) 
+	{						
+		//NEW: This is propogating padding through 
+		//invisible panels.
+		assert(dynamic_cast<BI*>(this));
+		if(!((BI*)this)->box_type)
+		ret = panel_padding||bottom_pad;
+
 		int new_w = column_x-x_in+max_w+x_rl;
 
 		if(first_child()) 
@@ -550,6 +588,8 @@ void UI::Control::_pack(int x, int y)
 			}
 		}
 	}
+
+	return ret;
 }
 
 /******************************** Live Variables **************************/
@@ -806,7 +846,7 @@ void UI::Control::enable(bool enable)
 	//controls, so that it's unnecessary to "unlink" children.
 	set(&Control::enabled,enable);
 	
-	//NOTE: Node::_unlink expects this to deactivate controls.
+	//NOTE: set_parent(0) expects this to deactivate controls.
 	if(!enable)
 	if(ui&&ui->_active_control&&!ui->_active_control->enabled)
 	{

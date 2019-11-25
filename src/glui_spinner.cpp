@@ -301,14 +301,14 @@ void UI::Spinner::_draw()
 	if(i==Bitmap::SPINNER_UP_OFF||i==Bitmap::SPINNER_UP_DIS)
 	{
 		glColor3ub(175,175,175);
-		draw_border_rect(x1,y1+1,x2+1,y2+2,2);	
+		draw_border_rect(x1,y1+1,x2+1,y2+2,4);	
 	}
 	if(j==Bitmap::SPINNER_DOWN_OFF||j==Bitmap::SPINNER_DOWN_DIS)
 	{
 		y1+=UI_SPINNER_ARROW_HEIGHT;
 		y2+=UI_SPINNER_ARROW_HEIGHT;
 		glColor3ub(175,175,175);
-		draw_border_rect(x1,y1+1,x2+1,y2+1,2|4);	
+		draw_border_rect(x1,y1+1,x2+1,y2+1,4|8);	
 	}*/
 }
 
@@ -358,16 +358,16 @@ bool Spin_Interface::_special_handler(int key, int modifiers)
 
 void UI::Spinner::_update_live()
 {
-	if(edittext)
+	if(TI*et=edittext)
 	{
 		if(data_type==SPIN_INT)
 		{
-			if(int_val!=edittext->int_val)
-			edittext->set_int_val(int_val);
+			if(int_val!=et->int_val||et->text.empty())
+			et->set_int_val(int_val);
 		}
-		else if(float_val!=edittext->float_val) 
+		else if(float_val!=et->float_val||et->text.empty()) 
 		{
-			edittext->set_float_val(float_val);
+			et->set_float_val(float_val);
 		}
 	}
 }

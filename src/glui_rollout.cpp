@@ -95,17 +95,17 @@ void UI::Rollout::_draw()
 	if(!is_open)
 	{
 		glColor3ub(128,128,128); 
-		draw_border_rect(x1-1,y1-1,x2+1,y2+1,1|8);
+		draw_border_rect(x1-1,y1-1,x2+1,y2+1,1|2);
 		
 		if(!press) //Shadow?
 		{
 			glColor3ub(255,255,255);
-			draw_border_rect(x1-1,y1-1,x2+1,y2+1,2|4);
+			draw_border_rect(x1-1,y1-1,x2+1,y2+1,4|8);
 			glColor3ub(233,233,233);
 		}
 		else glColor3ub(255,255,255);
 
-		draw_border_rect(x1-!press,y1-1,x2+1,y2+1,press?2|4|8:2|4);
+		draw_border_rect(x1-!press,y1-1,x2+1,y2+1,press?1|4|8:4|8);
 	}
 	else 
 	{
@@ -117,9 +117,9 @@ void UI::Rollout::_draw()
 		if(!press) //Shadow?
 		{
 			glColor3ub(175,175,175);
-			draw_border_rect(x1,y1+1,x2-1,y2+1,4);
+			draw_border_rect(x1,y1+1,x2-1,y2+1,8);
 			glColor3ub(233,233,233);
-			draw_border_rect(x1,y1-1,x2+1,y2+2,2);
+			draw_border_rect(x1,y1-1,x2+1,y2+2,4);
 		}
 	}
 	

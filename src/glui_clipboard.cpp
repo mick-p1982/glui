@@ -319,7 +319,7 @@ bool Clipboard::get_text(String &container)
 			(p.d,p.w,ev.xselection.property,partial_content,INT_MAX,0,0,
 			&unused1,&unused2,&content,&char_remains,&utf8_string))
 			goto error;
-            container.reserve(partial_content/sizeof(char)*char_remains);
+            container.reserve(partial_content*char_remains);
 			assert(!utf8_string||'\0'==utf8_string[content]);
 			glui_clipboard_urlencode(container,utf8_string);
             partial_content+=content;

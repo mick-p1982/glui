@@ -1045,18 +1045,17 @@ bool UI::_keyboard(int key)
 	//right now, but ideally it can/will change.
 	assert(old_control==GLUI.active_control);
 
+	//TODO: Nvidia GLUT DOESN'T SEND Ctrl+Tab COMBINATIONS. USERS WILL
+	//JUST HAVE TO SEND THEM DIRECTLY. IF SO GLUI SHOULD IGNORE GLUT'S.
+	//(SOMEHOW!)
+	bool c4805 = cm&GLUT_ACTIVE_CTRL;
+
 	/*** If it's a tab or shift tab, we don't pass it on to the controls.
 	Instead, we use it to cycle through active controls ***/	
 	if(key=='\t' 
 	//&&!_mouse_button_down //2019: Why on earth???
 	/*&&(!old_control||!old_control->wants_tabs())*/)
 	{
-	  //TODO: Nvidia GLUT DOESN'T SEND Ctrl+Tab COMBINATIONS. USERS WILL
-	  //JUST HAVE TO SEND THEM DIRECTLY. IF SO GLUI SHOULD IGNORE GLUT'S.
-	  //(SOMEHOW!)
-
-		bool c4805 = cm&GLUT_ACTIVE_CTRL;
-
 		//2019: Without Undo feature consuming tabs is pretty unfriendly.
 		if(old_control&&c4805==old_control->tab_navigate) 
 		{
@@ -1089,7 +1088,7 @@ bool UI::_keyboard(int key)
 			if(new_control!=_active_control) goto wants_tabs2_or_loop;
 		}
 	}
-	else if(key==' '&&!cm&&old_control
+	else if(key==' '&&old_control //&&!cm //Why was !cm again???
 	&&old_control->spacebar_mouse_click&&!GLUI.curr_button_down)
 	{
 		/*** If the user presses the spacebar, and a non-edittext control
@@ -1116,6 +1115,8 @@ bool UI::_keyboard(int key)
 		{
 			/*** Pass the keystroke onto the active control, if any ***/		
 			callthrough = old_control->key_handler(key,cm);
+
+			if(callthrough&&key=='\t') goto wants_tabs2_or_loop;
 		}
 
 		if(callthrough&&keyboard_callback)
@@ -1337,7 +1338,7 @@ void UI::_passive_motion(int x, int y)
 void UI::_entry(int state)
 {
 	//NEW: I worry ~Control should do this instead.
-	_mouse_over_control = nullptr; 
+	_mouse_over_control = NULL; 
 
 	/*if(!_active_control||(_active_control
 	&&(_active_control->type==UI_CONTROL_EDITTEXT
@@ -1530,7 +1531,7 @@ bool UI::activate_control(Control *c, int how)
 			_active_control = c; return false; 
 		}
 
-		/** If this isn't a container c, then redraw it in its
+		/** If this isn't a container control, then redraw it in its
 		deactivated state.  Container controls, such as panels, look
 		the same activated or not **/
 
@@ -1615,8 +1616,8 @@ bool UI::activate_control(Control *c, int how)
 		
 		deactivate:
 		
-		/** Are we not activating a c in the same window as the
-		previous active c? */
+		/** Are we not activating a control in the same window as the
+		previous active control? */
 		if(GLUI.active_control_ui/*&&this!=GLUI.active_control_ui*/)
 		{
 			if(c!=GLUI.active_control)

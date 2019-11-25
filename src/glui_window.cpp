@@ -192,16 +192,16 @@ void Window::draw_active_name(int x, int y, C_String name, int active)
 void Window::draw_raised_rect(int x1, int y1, int x2, int y2, int shadow)
 {
 	glColor3ub(255,255,255);
-	draw_border_rect(x1,y1,x2,y2,1|8);
+	draw_border_rect(x1,y1,x2,y2,1|2);
 
 	glColor3ub(0,0,0);
-	draw_border_rect(x1,y1,x2,y2,2|4);	
+	draw_border_rect(x1,y1,x2,y2,4|8);	
 	
 	glColor3ub(128,128,128);	
-	draw_border_rect(x1+1,y1+1,x2-1,y2-1,2|4);
+	draw_border_rect(x1+1,y1+1,x2-1,y2-1,4|8);
 
 	glColor3ub(175,175,175);
-	draw_border_rect(x1+1,y1+1,x2-1,y2-1,1|8);
+	draw_border_rect(x1+1,y1+1,x2-1,y2-1,1|2);
 	if(shadow)
 	{
 		//glColor3ub(175,175,175);
@@ -214,16 +214,16 @@ void Window::draw_raised_rect(int x1, int y1, int x2, int y2, int shadow)
 void Window::draw_sunken_rect(int x1, int y1, int x2, int y2)
 {
 	glColor3ub(128,128,128);
-	draw_border_rect(x1,y1,x2,y2-1,1|8);
+	draw_border_rect(x1,y1,x2,y2-1,1|2);
 
 	glColor3ub(0,0,0);
-	draw_border_rect(x1+1,y1+1,x2-1,y2-2,1|8);
+	draw_border_rect(x1+1,y1+1,x2-1,y2-2,1|2);
 
 	glColor3ub(255,255,255);
-	draw_border_rect(x1-1,y1,x2,y2,2|4); 	
+	draw_border_rect(x1-1,y1,x2,y2,4|8);
 	
 	glColor3ub(175,175,175); 
-	draw_border_rect(x1+1,y1+2,x2-2,y2-2,2|4); 
+	draw_border_rect(x1+1,y1+2,x2-2,y2-2,4|8); 
 }
 
 /******* GLUI_Control::draw_box() **********/
@@ -296,7 +296,7 @@ void Window::draw_border_rect(int x1, int y1, int x2, int y2, int mask)
 	}	
 	else*/ //REMINDER: LINES doesn't work with STIPPLE.
 	{
-		int t = mask&1, r = mask&2, b = mask&4, l = mask&8;
+		int l = mask&1, t = mask&2, r = mask&4, b = mask&8;
 
 		glBegin(GL_LINE_STRIP);
 		if(t) glVertex2i(x1,y1);

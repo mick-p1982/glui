@@ -113,8 +113,8 @@ const int /* enum must write std::max<int> in full */
 UI_XOFF                    =   6,
 UI_YOFF                    =   6,
 UI_ITEMSPACING             =   3, //Rollout is expecting 3.
-UI_DEFAULT_WIDTH           = 100,
-UI_DEFAULT_HEIGHT          =  15,
+UI_DEFAULT_WIDTH           = 100, //REMOVE US
+UI_DEFAULT_HEIGHT          =  15, //REMOVE US
 UI_BUTTON_HEIGHT           =  25, //Odd squares focus rect.
 UI_SEPARATOR_HEIGHT        =   8,
 UI_ALIGN_EXPAND_WIDTH      =   8, //Can't support a column.
@@ -200,20 +200,15 @@ public:
 	//NOTE: These are designed to not pick up on too many types
 	//so the constructors are not too easily rendered ambiguous.
 
-	template<class> class sfinae{};
-	template<> class sfinae<char*>{ typedef char type; };
-	template<> class sfinae<const char*>{ typedef char type; };
-	template<> class sfinae<char[]>{ typedef char type; };
-	template<> class sfinae<const char[]>{ typedef char type; }; //VS2010
-	template<int N> class sfinae<char[N]>{ typedef char type; };
-	template<int N> class sfinae<const char[N]>{ typedef char type; }; //VS2010
+	//GCC: c_string can't access sfinae::type?
+	template<class> struct sfinae;
 
-	C_String():str(nullptr)
+	C_String():str(NULL)
 	{}
 	template<class T>
-	C_String(const T &ptr, typename sfinae<T>::type=0)
+	C_String(const T &ptr, typename sfinae<T>::type*_=0)
 	{
-		str = sizeof(T)!=1?ptr:nullptr;
+		str = sizeof(T)!=1?ptr:NULL;
 	}
 	C_String(const C_String &cp):str(cp.str)
 	{}	
@@ -232,6 +227,14 @@ public:
 
 	inline bool empty()const{ return !str||!*str; }
 };
+//GCC: "explicit specialization in non-namespace scope"
+template<class> struct C_String::sfinae{};
+template<> struct C_String::sfinae<char*>{ typedef char type; };
+template<> struct C_String::sfinae<const char*>{ typedef char type; };
+template<> struct C_String::sfinae<char[]>{ typedef char type; };
+template<> struct C_String::sfinae<const char[]>{ typedef char type; }; //VS2010
+template<int N> struct C_String::sfinae<char[N]>{ typedef char type; };
+template<int N> struct C_String::sfinae<const char[N]>{ typedef char type; }; //VS2010
 
 /************************************************************/
 /*                                                          */
@@ -350,7 +353,7 @@ public: //User draw methods
 	//In order to standardize these parameters I've removed the old APIs.
 	/** ff draws a 2px border; fff 3px; etc. 1 is top, 2 right, 4 bottom, 8 left. */
 	LINKAGE static void draw_border_rect(int x1, int y1, int x2, int y2, int edge_mask=0xF);
-	LINKAGE static void draw_raised_rect(int x1, int y1, int x2, int y2, int shadow=2|4);
+	LINKAGE static void draw_raised_rect(int x1, int y1, int x2, int y2, int shadow=4|8);
 	LINKAGE static void draw_sunken_rect(int x1, int y1, int x2, int y2);
 	LINKAGE static void draw_framed_rect(int x1, int y1, int x2, int y2, int neg_disables=BOX_CLEAR);	
 	LINKAGE static void draw_filled_rect(int x1, int y1, int x2, int y2, int neg_disables=BOX_WHITE);	
@@ -580,15 +583,15 @@ public:
 	}
 	inline void _link_this_to_parent_first(Node *parent)
 	{
-		_link(parent,1); //UNUSED
+		_link(parent,1);
 	}
 	inline void _link_this_to_sibling_next(Node *sibling)
 	{
-		_link(sibling,2); //UNUSED
+		_link(sibling,2);
 	}
 	inline void _link_this_to_sibling_prev(Node *sibling)
 	{
-		_link(sibling,3); //UNUSED
+		_link(sibling,3);
 	}
 	
 	#ifdef GLUI_GLUI_H___NODEPRECATED
@@ -755,7 +758,7 @@ public:
 	_HIDDEN           = 64, //2019
 	};
 
-	bool hidden(){ return _flags&_HIDDEN; }
+	bool hidden(){ return 0!=(_flags&_HIDDEN); }
 
 	inline UI(C_String name, int x=-1, int y=-1, int flags=0, Panel *mp=NULL)
 	{
@@ -1913,7 +1916,8 @@ private: //Display manager methods
 	friend class UI;
 	
 	/* Recalculate positions and offsets */
-	void _pack(int=0,int=0),_align_control(),_align_children();
+	bool _pack(int=0,int=0);
+	void _align_control(),_align_children();
 	
 protected:
 
@@ -1949,12 +1953,10 @@ protected:
 	}
 	inline ~Control()
 	{
-		//_unlink does work to nullify dangling pointers like _active_control.
-		if(!_parent_node) return;
-		//~Node can't do this because _unlink needs to dynamic_cast<Control*>.
-		_unlink();
-		//This helps compilers better inline ~Node.
-		assert(!_parent_node); _parent_node = NULL; //__assume(!_parent_node);
+		//REMINDER: set_parent does some deactivation logic that removes
+		//the control from global pointers that would dangle after their
+		//deletion.
+		set_parent();
 	}	
 	template<class T>	
 	#define GLUI_ARGS(...) \
@@ -2607,7 +2609,10 @@ public:
 	{
 		horizontal = horz_vert==HORIZONTAL; GLUI_LIVE 
 	}	
-	inline ScrollBar(){ _members_init(); }
+	inline ScrollBar()
+	{
+		horizontal = true; _members_init(); 
+	}
 	LINKAGE void _members_init();
 
 private:
@@ -2725,11 +2730,14 @@ public:
 	/*enum{ SHIFT=1, CTRL=2, ALT=4 };*/
 	inline void key_in(int a, int mod=0)
 	{
-		#ifdef GLUI_READLINE_MODIFIERS
-		key_handler(-a,mod);
-		#else
-		key_handler(+a,mod);
+		if(mod&1&&a>='a'&&a<='z')
+		a = 'A'+a-'a';
+		if(mod&2&&a>='a'-1) a-='a'-1;
+		if(mod&2&&a>='A'-1) a-='A'-1;		
+		#ifdef WIDGETS_95_READLINE_MODIFIERS
+		a = -a;
 		#endif
+		key_handler(a,mod);
 	}
 	//There's actually two ways to select-all. 
 	//This might not be what the user desires.
@@ -3033,7 +3041,9 @@ public:
 		//both.
 		UI::EditText *et = new 
 		UI::EditText(/*this*/parent,name,data_type,id,callback);		
-		et->alignment = ALIGN_BUDDY; //NEW		
+		et->alignment = ALIGN_BUDDY; //NEW	
+		//HACK: Don't overwrite live-variable.
+		if(live_type) et->has_limits = LIMIT_NONE;
 		set_parent(associated_object=et); parent = NULL;
 	}
 };
@@ -3225,7 +3235,7 @@ public:
  It might be useful for RadioButton to have a mode that does
  not nest under a parent node. It would want to use group_id.
  */
-class Group_Interface : public UI::Control
+class Group_Interface : public UI::Panel
 {
 public: //Interface methods
 
@@ -3254,9 +3264,15 @@ public:
 
 	inline Group_Interface()
 	{
-		can_activate  = false;
-		is_container  = true; 	
+		//NOTE: _pack expects is_container controls
+		//to be based on Box_Interface. This is how
+		//Widgets 95 (multiple) works anyway.
+
+		can_activate  = false;	
+		alignment     = ALIGN_LEFT;
 		placement     = BOTTOM|LEFT;
+
+		box_type      = NONE;
 	}
 };
 class UI::RadioGroup : public Interface<RadioGroup,Group_Interface>
@@ -3649,7 +3665,7 @@ public: //Interface methods
 	{
 		return !box_test(local_x,local_y);
 	}
-	LINKAGE bool _mouse_over(bool state, int local_x, int local_y);
+	LINKAGE bool _mouse_over(bool state, int local_x, int local_y);	
 	LINKAGE bool _special_handler(int key, int modifiers);	
 	inline Control *_wheel(){ return this; }
 

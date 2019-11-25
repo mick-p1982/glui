@@ -34,6 +34,8 @@
 #include "../include/glui_internal.h" //PCH
 #include "../include/glui_arcball.h" //"arcball.h"
 
+#include "float.h" //DBL_MAX
+
 namespace GLUI_Library
 {//-.
 //<-'

@@ -50,14 +50,15 @@ String &glui_format_str(String &str, const char *fmt,...)
 		len = vsnprintf(buf,bufsz,fmt,arg);
 		#endif
 		va_end(arg);
-		if(len>=0) break;
+		//if(len>=0) break;
+		if(len>=0&&len<bufsz) break; //C+11
 
 		// else make a bigger buf, try again
 		bufsz*=2; if(buf==stackbuf) 
 		{
-			buf = (char*)malloc(sizeof(char)*bufsz);
+			buf = (char*)malloc(bufsz);
 		}
-		else buf = (char*)realloc(buf,sizeof(char)*bufsz);
+		else buf = (char*)realloc(buf,bufsz);
 	}
 
 	str.assign(buf,len); if(buf!=stackbuf) free(buf); return str;

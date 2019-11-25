@@ -82,13 +82,13 @@ void Node::_sort(bool(*pred)(Node*,Node*), int depth)
 
 		_child_head = buf[0];
 		_child_tail = buf[--i];
-		buf[i]->_next_sibling = nullptr;
+		buf[i]->_next_sibling = NULL;
 		for(;i-->0;)
 		{
 			buf[i]->_next_sibling = buf[i+1];
 			buf[i+1]->_prev_sibling = buf[i];
 		}
-		buf[0]->_prev_sibling = nullptr;
+		buf[0]->_prev_sibling = NULL;
 	}
 
 	if(buf!=stackbuf) free(buf);
@@ -194,26 +194,6 @@ void Node::_link(Node *p, int how)
 
 void Node::_unlink()
 {
-	//Trying to eliminate internal dangling references.
-	if(UI::Control*c=dynamic_cast<UI::Control*>(this))
-	{
-		if(c->ui&&c->ui==GLUI.active_control_ui)
-		{
-			if(c->_child_head) //Recursive deactivate?
-			{
-				bool nice = c->enabled;
-
-				c->disable(); //Should deactivate children.
-
-				if(nice) c->enable(); 
-			}
-			else if(c==c->ui->_active_control)
-			{
-				c->ui->deactivate_current_control();
-			}
-		}
-	}
-
 	if(_prev_sibling) /* Unlink from prev sibling */
 	{
 		_prev_sibling->_next_sibling = _next_sibling;

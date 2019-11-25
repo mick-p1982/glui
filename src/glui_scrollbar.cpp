@@ -43,11 +43,11 @@ void UI::ScrollBar::_members_init()
 	if(horizontal)
 	{
 		h = UI_SCROLL_ARROW_SIZE;
-		w = UI_TEXTBOX_WIDTH;
+		w = UI_EDITTEXT_WIDTH; //UI_TEXTBOX_WIDTH
 	}
 	else
 	{
-		h = UI_TEXTBOX_HEIGHT;
+		h = UI_EDITTEXT_WIDTH; //UI_TEXTBOX_HEIGHT
 		w = UI_SCROLL_ARROW_SIZE;
 	}
 	alignment = CENTER;
@@ -90,7 +90,7 @@ void UI::ScrollBar::_members_init()
 }
 inline int UI::ScrollBar::_box_len()
 {
-	if(val_end!=val_start)
+	if(val_end!=val_start/*&&enabled*/)
 	{
 		const int min_tab = UI_SCROLL_BOX_STD_HEIGHT;
 		////box_length = int(track_length/double(visible_range));
@@ -231,7 +231,7 @@ void UI::ScrollBar::_draw()
 { 	
 	int bsp = _box_pos();
 	int box = _box_len();
-	int bep = bsp+(enabled?box:0);
+	int bep = bsp+box; //(enabled?box:0);
 	int sas = UI_SCROLL_ARROW_SIZE;		
 	int run = (horizontal?w:h);
 	int opp = (horizontal?h:w);
@@ -395,9 +395,10 @@ void UI::ScrollBar::draw_scroll_box(int x, int y, int w, int h)
 {
 	//NOTE: Both cases are functionally disabled. 
 	//draw_raised_box can't draw a zero-size box.
-	if(!enabled||val_start==val_end) return;
+	//if(!enabled||val_start==val_end) return;
+	if(w<6||h<6) return;
 
-	draw_raised_rect(x,y,x+w,y+h); //horizontal?4:2
+	draw_raised_rect(x,y,x+w,y+h);
 
 	if(this==GLUI::get_active())
 	{
@@ -441,15 +442,13 @@ int UI::ScrollBar::find_arrow(int local_x, int local_y)
 	{	
 		int pos = UI_SCROLL_ARROW_SIZE+_box_pos();
 						
-		//if(y>=0&&y<=pos) //Fights.
-		if(y>=0&&y<pos-1)
+		if(y>=0&&y<=pos) 
 		{
 			//FIX ME
 			//return STATE_UP;
 			return horizontal?STATE_DOWN:STATE_UP; //WHY DIFFER?????
 		}
-		//if(y>=pos+_box_len()&&y<=(hh+UI_SCROLL_ARROW_SIZE)) //Fights.
-		if(y>pos+_box_len()+1&&y<=(hh+UI_SCROLL_ARROW_SIZE))
+		if(y>=pos+_box_len()&&y<=(hh+UI_SCROLL_ARROW_SIZE)) 
 		{
 			//FIX ME
 			//return STATE_DOWN;
@@ -480,7 +479,15 @@ void UI::ScrollBar::do_click()
 
 			if(swap!=state)
 			{
-				//TODO: Try to stop box on cursor's center.
+				//TODO? Try to stop box on cursor's center.
+
+				//NEW: Prevent fighting in extreme cases where
+				//box is smaller than spaces between positions.
+				if((swap==STATE_UP||swap==STATE_DOWN)
+				&&(state==STATE_UP||state==STATE_DOWN))
+				{
+					swap = STATE_SCROLL; 
+				}
 			}
 
 			state = swap;

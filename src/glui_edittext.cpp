@@ -326,7 +326,16 @@ bool Text_Interface::_mouse_down_handler(int local_x, int local_y)
 	sel_start = sel_end = tmp_insertion_pt;
 
 	//update_and_draw_text(); //Can wait until held_down/up.
-
+			 	
+	if(DOUBLE_CLICKED==GLUI.get_clicked())
+	{
+		int se = sel_end;
+		sel_start = find_word_break(se-1,-1);
+		se = find_word_break(se+1,1);
+		if(se>0&&se<get_char_count()) se--;
+		sel_end = se;
+	}
+	
 	_dump("<- MOUSE DOWN"); //"<- MOUSE UP"
 
 	return false; //return true; //2019
@@ -411,10 +420,17 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 	if(abs_key<=127) key = abs_key;
 
 	if(iscntrl(abs_key)) switch(rl_key)
-	{				
-	case -'\r': //-CTRL('m')
+	{					
 	case +'\r': /* RETURN */
- 
+ 				 
+		if(modifiers&GLUT_ACTIVE_CTRL)
+		{
+			return true; //Ctrl+M? //Ctrl+\r?
+		}
+		//break;
+
+	case -'\r': //-CTRL('m')
+
 		switch(return_input_model)
 		{
 		case UI::ACTIVATE_OTHER: //EditText
@@ -441,9 +457,16 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 	   
 		//GLUI_Main::keyboard returns control to the container.
 		assert(0); break;
-	
-	case -'\t': //CTRL('i'):	
+
 	case +'\t': /* TAB */
+
+		if(modifiers&GLUT_ACTIVE_CTRL)
+		{
+			return true; //Ctrl+I? //Ctrl+\t?
+		}
+		//break;
+
+	case -'\t': //CTRL('i'):	
 	{	
 		if(!enabled) return false;
 
@@ -537,8 +560,23 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 
 		break;
 
-	case -'\b': //-CTRL('h')
 	case +'\b': /* BACKSPACE */
+
+		//Ctrl+H? Or Ctrl+Back?
+		if(modifiers&GLUT_ACTIVE_CTRL)
+		{
+			/*xcv_widgets_nonchar resolves this.
+			if(key=='h') return true; //Ctrl+H?
+			*/
+						
+			if(sel_end<=sel_start)
+			{
+				leftmost = find_word_break(sel_end-2,-1);
+			}
+		}
+		//break;
+
+	case -'\b': //-CTRL('h')
   
 		if(leftmost==rightmost) /* no selection */
 		{
@@ -615,9 +653,9 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 		}	
 		if(modifiers&(GLUT_ACTIVE_CTRL|GLUT_ACTIVE_ALT))
 		{
-			if(modifiers==GLUT_ACTIVE_CTRL)
+			if(GLUT_ACTIVE_CTRL==(modifiers&~GLUT_ACTIVE_SHIFT))
 			{
-				if(key>='a'&&key<'z'||key>='A'&&key<'Z')
+				if(key>='a'&&key<='z'||key>='A'&&key<='Z')
 				{
 					key = CTRL(key); goto ctrl;
 				}
@@ -625,6 +663,10 @@ bool Text_Interface::_key_handler(int key, int modifiers)
 
 			/** ignore other keys with modifiers */
 			return true;
+		}
+		else if(modifiers==GLUT_ACTIVE_SHIFT)
+		{
+			if(key>='a'&&key<='z') key-=32;
 		}
 	
 		/**** If there's a current selection, erase it ******/
@@ -769,7 +811,8 @@ bool Text_Interface::_special_handler(int key, int modifiers)
 
 		if(modifiers&GLUT_ACTIVE_CTRL) 
 		{
-			se = find_word_break(sel_end,dx);
+			if(dx==-1) se-=2;
+			se = find_word_break(se,dx);
 		}
 		else if(ss==se||modifiers&GLUT_ACTIVE_SHIFT)
 		{
@@ -883,9 +926,10 @@ bool Text_Interface::_special_handler(int key, int modifiers)
 
 bool Text_Interface::_activate(int how)
 {
-	if(how==UI::ACTIVATE_TAB) 
+	if(how==UI::ACTIVATE_TAB&&!tab_navigate) 	
+	if(!GLUI.curr_modifiers&GLUT_ACTIVE_CTRL)
 	{
-		if(!tab_navigate) return false; //2019: new default behavior
+		return false; //2019: new default behavior
 	}
 
 	_dump(how?"-> ACTIVATE":"-> DEACTIVATE");
@@ -897,12 +941,14 @@ bool Text_Interface::_activate(int how)
 		/* Don't select everything if activated with mouse */
 		if(how==UI::ACTIVATE_MOUSE) return true;
 
-		sel_start = 0;
-		sel_end = get_char_count();
-		if(!sel_end) //NEW
+		if(tab_navigate)
 		{
-			GLUI::reset_caret(this);
-			GLUI.caret_x = GLUI.caret_y = 0;
+			sel_start = 0;
+			sel_end = get_char_count();
+		}
+		if(sel_start==sel_end)
+		{
+			GLUI::set_caret(this,sel_end);
 		}
 	}
 	else //deactivate()

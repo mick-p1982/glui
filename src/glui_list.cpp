@@ -50,7 +50,11 @@ extern void glui_list_scrollbar_callback(UI::ScrollBar *sb)
 bool UI::List::_mouse_down_handler(int local_x, int local_y)
 {		
 	int line;
-	if(local_y<0) //2019: spacebar_mouse_click? 
+		
+	//TODO: Spacebar should set click_et so it is able to
+	//double-click normally.
+
+	if(local_x<0) //2019: spacebar_mouse_click? 
 	{
 		line = curr_line;
 
@@ -76,6 +80,8 @@ bool UI::List::_mouse_down_handler(int local_x, int local_y)
 
 	if(dbl&&GLUI.double_click_millis)
 	{
+		//REMOVE ME
+ 		if(local_x>=0) //spacebar_mouse_click?
 		if(!GLUI::get_clicked()) dbl = false;
 	}
 		

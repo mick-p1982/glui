@@ -55,9 +55,9 @@ void Box_Interface::_draw()
 		top = 0; left = UI_XOFF; drop+=UI_YOFF;
 
 		glColor3f(1,1,1);
-		draw_border_rect(0,0,w,h-1,1|8);
+		draw_border_rect(0,0,w,h-1,1|2);
 		glColor3ub(128,128,128);
-		draw_border_rect(-1,0,w,h,2|4);		
+		draw_border_rect(-1,0,w,h,4|8);		
 	}
 	else if(box_type==ETCHED)
 	{

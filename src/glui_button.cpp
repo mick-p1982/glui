@@ -77,7 +77,7 @@ void UI::Button::_draw()
 		glColor3ub(128,128,128);		
 		draw_border_rect(0,0,w,h,0xF);
 	}
-	else draw_raised_rect(0,0,w,h,2|4);
+	else draw_raised_rect(0,0,w,h);
 	
 	//draw_text(int press)
 	{
